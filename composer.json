@@ -1,0 +1,21 @@
+{
+    "name": "resrap/components",
+    "description": "parser utils",
+    "type": "library",
+    "license": "mit",
+    "autoload": {
+        "psr-4": {
+            "Resrap\\Component\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "ErickJMenezes",
+            "email": "erickmenezes.dev@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+      "php": "^8.4"
+    }
+}
