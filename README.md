@@ -34,27 +34,22 @@ require __DIR__ . '/vendor/autoload.php';
 ## Core Concepts
 
 - `Combinator` (`Resrap\Component\Impl\Combinator`)
-  - Define a named parser using `Combinator::is('name')`.
-  - Add one or more alternative sequences with `->or(...)`.
+  - Define one or more alternative sequences with `::is(...)` and `->or(...)`.
   - Finish each sequence by providing a `->then(function(array $matches) { ... })` callback that transforms matched values to your desired output (e.g., AST nodes). Use `->pass()` to return the raw matches.
   - Apply a combinator to a scanner with `->apply(ScannerInterface $scanner)`.
 
 - `PendingSequence` (`Resrap\Component\Impl\PendingSequence`)
-  - Returned from `->or(...)` and completed by `->then(...)` or `->pass()`.
+  - Returned from `::is()` and `->or(...)` and completed by `->then(...)` or `->pass()`.
 
 - `ScannerInterface` (`Resrap\Component\Spec\ScannerInterface`)
   - Your lexer/scanner must implement:
-    - `lex(): int|UnitEnum` — returns the current token (as an `enum` case or integer code).
+    - `lex(): int|UnitEnum` — returns the next token (as an `enum` case or integer code).
     - `value(): ?string` — returns the current token’s textual value.
-    - `advance(): void` — move to the next token.
-    - `goto(int $index): void` — restore the cursor position.
-    - `index(): int` — current position.
-    - `eof(): bool` — end-of-stream check.
 
 ### Matching semantics in `Combinator`
 - UnitEnum tokens: If you pass a `UnitEnum` (e.g. an enum case from your token enum), matching uses identity (`===`) against `ScannerInterface::lex()`. On match, the current `value()` is pushed into `$matches` and the scanner advances.
 - Strings (single characters): If you pass a string like `'+'`, the engine compares `ord($matcher)` to `ScannerInterface::lex()`. This is useful when your scanner emits ASCII codes for punctuation. If your scanner returns enums instead (as in the example), prefer matching via enum cases.
-- Nested/recursive combinators: You can include other `Combinator` instances directly in sequences. To self-reference the current combinator (for recursion), pass the placeholder string `":<name>:"` (e.g., `":math_expression:"`). The engine replaces it with the current combinator instance.
+- Nested/recursive combinators: You can include other `Combinator` instances directly in sequences.
 
 ## Example: Arithmetic expression parser
 A minimal example is provided under `examples/Math/`. It demonstrates parsing a simple arithmetic expression into an AST using enums for tokens and a fake scanner.
@@ -80,26 +75,23 @@ final class MathExpressionParser
 {
     public static function expression(): Combinator
     {
-        return Combinator::is('math_expression')
-            ->or(self::number())
+        return Combinator::is(self::number())
             ->then(fn(array $m) => $m[0])
-            // `":math_expression:"` self-references this combinator for recursion
-            ->or(self::number(), self::operator(), ':math_expression:')
+            // `self::expression(...)` self-references this combinator for recursion and avoid infinity loop
+            ->or(self::number(), self::operator(), self::expression(...))
             ->then(fn(array $m) => new MathExpression([$m[0], $m[1], $m[2]]));
     }
 
     public static function number(): Combinator
     {
-        return Combinator::is('math_number')
-            ->or(Token::NUMBER)
+        return Combinator::is(Token::NUMBER)
             ->then(fn(array $m) => new Number($m[0]));
     }
 
     public static function operator(): Combinator
     {
         $whenMatches = fn(array $m) => new MathOperator($m[0]);
-        return Combinator::is('math_operator')
-            ->or(Token::PLUS)->then($whenMatches)
+        return Combinator::is(Token::PLUS)->then($whenMatches)
             ->or(Token::MINUS)->then($whenMatches)
             ->or(Token::MULTIPLY)->then($whenMatches)
             ->or(Token::DIVIDE)->then($whenMatches);
@@ -132,12 +124,8 @@ use UnitEnum;
 
 final class MyScanner implements ScannerInterface {
     // ... keep track of position, tokens, and values
-    public function lex(): int|UnitEnum { /* return current token */ }
-    public function value(): ?string { /* return current text */ }
-    public function advance(): void { /* move forward */ }
-    public function goto(int $index): void { /* backtrack */ }
-    public function index(): int { /* position */ }
-    public function eof(): bool { /* end */ }
+    public function lex(): int|UnitEnum { /* lext return next token */ }
+    public function value(): ?string { /* return last parsed token text */ }
 }
 ```
 
@@ -146,50 +134,37 @@ final class MyScanner implements ScannerInterface {
 ```php
 use Resrap\Component\Impl\Combinator;
 
-$number = fn() => Combinator::is('number')
-    ->or(Token::NUMBER)
+$number = fn() => Combinator::is(Token::NUMBER)
     ->then(fn($m) => intval($m[0]));
 
-$operator = fn() => Combinator::is('operator')
-    ->or(Token::PLUS)->then(fn($m) => $m[0])
+$operator = fn() => Combinator::is(Token::PLUS)
+    ->then(fn($m) => $m[0])
     ->or(Token::MINUS)->then(fn($m) => $m[0]);
 
-$expr = fn() => Combinator::is('expr')
-    ->or($number())
-    ->then(fn($m) => $m[0])
-    ->or($number(), $operator(), ':expr:')
-    ->then(fn($m) => [$m[0], $m[1], $m[2]]);
+$expr = function () use ($number, $operator, &$expr) {
+    return Combinator::is($number())
+        ->then(fn($m) => $m[0])
+        ->or($number(), $operator(), $expr(...))
+        ->then(fn($m) => [$m[0], $m[1], $m[2]])
+};
 ```
 
 4. Parse.
 
 ```php
+use Resrap\Component\Impl\ScannerIterator;
+
 $scanner = new MyScanner(/* your input */);
-$ast = $expr()->apply($scanner);
+$ast = $expr()->apply(new ScannerIterator($scanner));
 ```
 
 ## Error handling
 - If no sequence matches at the current position, `Combinator::apply()` throws `RuntimeException` with the unexpected value and the scanner position.
-- You can use `ScannerInterface::goto()` and the library’s internal backtracking to try next alternatives; this happens automatically for each `or(...)` branch.
 
-## Project structure
-- `src/` — library source
-  - `Impl/Combinator.php`
-  - `Impl/PendingSequence.php`
-  - `Spec/CombinatorInterface.php`
-  - `Spec/ScannerInterface.php`
+## Examples
 - `examples/` — runnable examples and demonstration code
-  - `Math/`
-    - `Token.php`
-    - `FakeScanner.php`
-    - `Ast/`
-    - `Parser/`
-    - `main.php`
-
-## Contributing
-- Issues and PRs are welcome.
-- Please keep the public API small and focused.
-- Add or update examples to demonstrate new capabilities.
+  - `Math/` Simple math expression parser
+  - `Json/` JSON Parser
 
 ## License
 MIT. See `composer.json` for the declared license.
