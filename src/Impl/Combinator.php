@@ -32,18 +32,20 @@ final class Combinator
      */
     private array $thenCallbacks = [];
 
-    private function __construct(public readonly string $name) {}
+    private function __construct() {}
 
     /**
-     * Creates a new instance of the Combinator class with the given name.
+     * Creates a pending sequence by evaluating a given sequence of elements.
      *
-     * @param string $name The name to be assigned to the Combinator instance.
+     * @param (Closure(): Combinator|UnitEnum|string)|Combinator|UnitEnum|string ...$sequence The sequence of elements
+     *                                                                                        to evaluate.
      *
-     * @return Combinator A new instance of the Combinator class.
+     * @return PendingSequence A new PendingSequence instance based on the provided sequence.
      */
-    public static function is(string $name): Combinator
+    public static function is(Closure|Combinator|UnitEnum|string ...$sequence): PendingSequence
     {
-        return new self($name);
+        return new self()
+            ->or(...$sequence);
     }
 
     /**
@@ -63,7 +65,6 @@ final class Combinator
         }
         $sequence = array_map(
             fn($item) => match (true) {
-                $item === ":$this->name:" => $this,
                 $item instanceof Closure => fn(): Combinator|UnitEnum|string => $item(),
                 default => $item,
             },
@@ -132,7 +133,7 @@ final class Combinator
             $iterator->goto($currentPosition);
         }
         throw new RuntimeException(
-            "Unexpected value \"{$iterator->value()}\" found when parsing {$this->name} at position {$iterator->index()}.",
+            "Unexpected value \"{$iterator->value()}\" found at position {$iterator->index()}.",
         );
     }
 }

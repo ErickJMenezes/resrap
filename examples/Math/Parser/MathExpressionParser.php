@@ -14,26 +14,23 @@ final class MathExpressionParser
 {
     public static function expression(): Combinator
     {
-        return Combinator::is('math_expression')
-            ->or(self::number())
+        return Combinator::is(self::number())
             ->then(fn(array $m) => $m[0])
             //
-            ->or(self::number(), self::operator(), ':math_expression:')
+            ->or(self::number(), self::operator(), self::expression(...))
             ->then(fn(array $m) => new MathExpression([$m[0], $m[1], $m[2]]));
     }
 
     public static function number(): Combinator
     {
-        return Combinator::is('math_number')
-            ->or(Token::NUMBER)
+        return Combinator::is(Token::NUMBER)
             ->then(fn(array $m) => new Number($m[0]));
     }
 
     public static function operator(): Combinator
     {
         $whenMatches = fn(array $m) => new MathOperator($m[0]);
-        return Combinator::is('math_operator')
-            ->or(Token::PLUS)
+        return Combinator::is(Token::PLUS)
             ->then($whenMatches)
             //
             ->or(Token::MINUS)
