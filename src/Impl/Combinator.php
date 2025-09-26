@@ -50,8 +50,9 @@ final class Combinator implements CombinatorInterface
     /**
      * Combines a sequence of elements into a pending sequence.
      *
-     * @param (Closure(): Combinator|UnitEnum|string)|Combinator|UnitEnum|string ...$sequence The sequence of elements to combine.
-     *                                                                                       At least one element must be provided.
+     * @param (Closure(): Combinator|UnitEnum|string)|Combinator|UnitEnum|string ...$sequence The sequence of elements
+     *                                                                           to combine. At least one element must
+     *                                                                           be provided.
      *
      * @return PendingSequence A new PendingSequence instance created with the provided sequence.
      * @throws InvalidArgumentException If the sequence is empty.
@@ -67,35 +68,33 @@ final class Combinator implements CombinatorInterface
                 $item instanceof Closure => fn(): Combinator|UnitEnum|string => $item(),
                 default => $item,
             },
-            $sequence
+            $sequence,
         );
-        return new PendingSequence(function(Closure $whenMatches) use (&$sequence): Combinator {
-            $this->combinations[] = $sequence;
-            $this->thenCallbacks[] = $whenMatches;
+        return new PendingSequence(function (Closure $whenMatches) use (&$sequence): Combinator {
+            $this->combinations = [$sequence, ...$this->combinations];
+            $this->thenCallbacks = [$whenMatches, ...$this->thenCallbacks];
             return $this;
         });
     }
 
     /**
-     * Applies a sequence of combinators to the provided scanner and executes the corresponding callback if a match is found.
+     * Applies a sequence of combinators to the provided scanner and executes the corresponding callback if a match is
+     * found.
      *
-     * @param ScannerIterator $scanner The scanner interface that provides methods for navigating and matching tokens.
+     * @param ScannerIterator $iterator The scanner iterator that provides methods for navigating and matching tokens.
      *
      * @return mixed The result from the callback associated with the matched sequence.
      * @throws RuntimeException If no matching sequence is found or an unexpected value is encountered.
      */
-    public function apply(ScannerIterator $scanner): mixed
+    public function apply(ScannerIterator $iterator): mixed
     {
-        $combinators = array_values(array_reverse($this->combinations));
-        $callbacks = array_values(array_reverse($this->thenCallbacks));
-
-        foreach ($combinators as $sKey => $sequence) {
-            $currentPosition = $scanner->index();
+        foreach ($this->combinations as $sKey => $sequence) {
+            $currentPosition = $iterator->index();
             $parsed = [];
             foreach ($sequence as $matcher) {
-                $token = $scanner->token();
+                $token = $iterator->token();
                 if ($token === ScannerInterface::EOF) {
-                    $scanner->goto($currentPosition);
+                    $iterator->goto($currentPosition);
                     break;
                 }
                 if ($matcher instanceof Closure) {
@@ -104,35 +103,37 @@ final class Combinator implements CombinatorInterface
                 }
                 if ($matcher instanceof Combinator) {
                     try {
-                        $parsed[] = $matcher->apply($scanner);
+                        $parsed[] = $matcher->apply($iterator);
                         continue;
                     } catch (RuntimeException $e) {
-                        $scanner->goto($currentPosition);
+                        $iterator->goto($currentPosition);
                         break;
                     }
                 }
 
                 if ($matcher instanceof UnitEnum) {
                     if ($token === $matcher) {
-                        $parsed[] = $scanner->value();
-                        $scanner->advance();
+                        $parsed[] = $iterator->value();
+                        $iterator->advance();
                         continue;
                     }
                     break;
                 }
 
                 if (is_string($matcher) && ord($matcher) === $token) {
-                    $parsed[] = $scanner->value();
-                    $scanner->advance();
+                    $parsed[] = $iterator->value();
+                    $iterator->advance();
                     continue;
                 }
                 break;
             }
             if (count($parsed) === count($sequence)) {
-                return $callbacks[$sKey]($parsed);
+                return $this->thenCallbacks[$sKey]($parsed);
             }
-            $scanner->goto($currentPosition);
+            $iterator->goto($currentPosition);
         }
-        throw new RuntimeException("Unexpected value \"{$scanner->value()}\" found when parsing {$this->name} at position {$scanner->index()}.");
+        throw new RuntimeException(
+            "Unexpected value \"{$iterator->value()}\" found when parsing {$this->name} at position {$iterator->index()}.",
+        );
     }
 }
