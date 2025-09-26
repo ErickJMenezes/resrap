@@ -6,7 +6,6 @@ namespace Resrap\Component\Impl;
 
 use Closure;
 use InvalidArgumentException;
-use Resrap\Component\Spec\CombinatorInterface;
 use Resrap\Component\Spec\ScannerInterface;
 use RuntimeException;
 use UnitEnum;
@@ -21,7 +20,7 @@ use UnitEnum;
  * The `apply` method processes input using registered sequences and invokes
  * associated callbacks upon successful matches.
  */
-final class Combinator implements CombinatorInterface
+final class Combinator
 {
     /**
      * @var array<array-key, array<int, Combinator|UnitEnum|string>>
