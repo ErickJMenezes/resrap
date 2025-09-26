@@ -130,6 +130,7 @@ final class Combinator implements CombinatorInterface
             if (count($parsed) === count($sequence)) {
                 return $callbacks[$sKey]($parsed);
             }
+            $scanner->goto($currentPosition);
         }
         throw new RuntimeException("Unexpected value \"{$scanner->value()}\" found when parsing {$this->name} at position {$scanner->index()}.");
     }
