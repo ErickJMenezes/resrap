@@ -50,20 +50,21 @@ final class Combinator implements CombinatorInterface
     /**
      * Combines a sequence of elements into a pending sequence.
      *
-     * @param Combinator|UnitEnum|string ...$sequence The sequence of elements to combine.
-     *                                                At least one element must be provided.
+     * @param (Closure(): Combinator|UnitEnum|string)|Combinator|UnitEnum|string ...$sequence The sequence of elements to combine.
+     *                                                                                       At least one element must be provided.
      *
      * @return PendingSequence A new PendingSequence instance created with the provided sequence.
      * @throws InvalidArgumentException If the sequence is empty.
      */
-    public function or(Combinator|UnitEnum|string ...$sequence): PendingSequence
+    public function or(Closure|Combinator|UnitEnum|string ...$sequence): PendingSequence
     {
         if (count($sequence) === 0) {
             throw new InvalidArgumentException("The sequence must have at least one element.");
         }
         $sequence = array_map(
-            fn($item) => match ($item) {
-                ":$this->name:" => $this,
+            fn($item) => match (true) {
+                $item === ":$this->name:" => $this,
+                $item instanceof Closure => fn(): Combinator|UnitEnum|string => $item(),
                 default => $item,
             },
             $sequence
@@ -95,6 +96,10 @@ final class Combinator implements CombinatorInterface
                 if ($scanner->eof()) {
                     $scanner->goto($currentPosition);
                     break;
+                }
+                if ($matcher instanceof Closure) {
+                    // matcher created lazily to avoid recursive calls
+                    $matcher = $matcher();
                 }
                 if ($matcher instanceof Combinator) {
                     try {
