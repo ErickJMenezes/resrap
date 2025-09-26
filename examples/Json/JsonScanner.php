@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Resrap\Examples\Json;
 
-use Resrap\Component\Spec\ScannerInterface;
+use Resrap\Component\Combinator\ScannerInterface;
 use RuntimeException;
 use UnitEnum;
 

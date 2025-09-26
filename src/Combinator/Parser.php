@@ -6,7 +6,6 @@ namespace Resrap\Component\Combinator;
 
 use Closure;
 use InvalidArgumentException;
-use Resrap\Component\Spec\ScannerInterface;
 use RuntimeException;
 use UnitEnum;
 

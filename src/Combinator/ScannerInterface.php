@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Resrap\Component\Spec;
+namespace Resrap\Component\Combinator;
 
 use UnitEnum;
 

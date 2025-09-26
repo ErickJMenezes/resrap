@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Resrap\Component\Combinator;
 
-use Resrap\Component\Spec\ScannerInterface;
 use UnitEnum;
 
 /**

@@ -41,7 +41,7 @@ require __DIR__ . '/vendor/autoload.php';
 - `PendingSequence` (`Resrap\Component\Impl\PendingSequence`)
   - Returned from `::is()` and `->or(...)` and completed by `->then(...)` or `->pass()`.
 
-- `ScannerInterface` (`Resrap\Component\Spec\ScannerInterface`)
+- `ScannerInterface` (`Resrap\Component\Combinator\ScannerInterface`)
   - Your lexer/scanner must implement:
     - `lex(): int|UnitEnum` — returns the next token (as an `enum` case or integer code).
     - `value(): ?string` — returns the current token’s textual value.
@@ -119,8 +119,7 @@ enum Token { case NUMBER; case PLUS; case MINUS; case MULTIPLY; case DIVIDE; }
 2. Implement `ScannerInterface` to emit your tokens and values.
 
 ```php
-use Resrap\Component\Spec\ScannerInterface;
-use UnitEnum;
+use Resrap\Component\Combinator\ScannerInterface;
 
 final class MyScanner implements ScannerInterface {
     // ... keep track of position, tokens, and values
