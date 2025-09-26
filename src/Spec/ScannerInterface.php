@@ -14,46 +14,24 @@ use UnitEnum;
 interface ScannerInterface
 {
     /**
-     * Retrieves a token representation as an instance of UnitEnum or null.
+     * Represents the end of the token stream.
+     */
+    public const int EOF = 0;
+
+    /**
+     * Retrieves parses the next token and return in a representation of an instance of UnitEnum or int.
      *
-     * @return UnitEnum|int The token as a UnitEnum instance, or null if no token is available.
+     * When the return value is an int, it can be zero, which represents the end of the token stream; or it can be a
+     * literal character {@see ord()} value.
+     *
+     * @return UnitEnum|int The token as a UnitEnum instance, or int.
      */
     public function lex(): int|UnitEnum;
 
     /**
-     * Retrieves the value.
+     * Retrieves the string value represented by the current token.
      *
      * @return string|null Returns the value if available, or null otherwise.
      */
     public function value(): ?string;
-
-    /**
-     * Advances the state or position in the process.
-     *
-     * @return void This method does not return a value.
-     */
-    public function advance(): void;
-
-    /**
-     * Moves the cursor to the specified index.
-     *
-     * @param int $index The position to move to.
-     *
-     * @return void
-     */
-    public function goto(int $index): void;
-
-    /**
-     * Retrieves the current index.
-     *
-     * @return int The current index.
-     */
-    public function index(): int;
-
-    /**
-     * Checks if the end of the file has been reached.
-     *
-     * @return bool Returns true if the end of the file is reached, false otherwise.
-     */
-    public function eof(): bool;
 }

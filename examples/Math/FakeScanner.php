@@ -9,7 +9,7 @@ use UnitEnum;
 
 class FakeScanner implements ScannerInterface
 {
-    private int $pos = 0;
+    private int $pos = -1;
 
     private array $strings;
 
@@ -39,31 +39,16 @@ class FakeScanner implements ScannerInterface
 
     public function lex(): int|UnitEnum
     {
+        $this->pos++;
+        if ($this->pos >= count($this->strings)) {
+            $this->pos--;
+            return ScannerInterface::EOF;
+        }
         return $this->tokens[$this->pos];
     }
 
     public function value(): ?string
     {
-        return $this->strings[$this->pos];
-    }
-
-    public function advance(): void
-    {
-        $this->pos++;
-    }
-
-    public function goto(int $index): void
-    {
-        $this->pos = $index;
-    }
-
-    public function index(): int
-    {
-        return $this->pos;
-    }
-
-    public function eof(): bool
-    {
-        return $this->pos >= count($this->strings);
+        return $this->strings[$this->pos] ?? null;
     }
 }

@@ -79,12 +79,12 @@ final class Combinator implements CombinatorInterface
     /**
      * Applies a sequence of combinators to the provided scanner and executes the corresponding callback if a match is found.
      *
-     * @param ScannerInterface $scanner The scanner interface that provides methods for navigating and matching tokens.
+     * @param ScannerIterator $scanner The scanner interface that provides methods for navigating and matching tokens.
      *
      * @return mixed The result from the callback associated with the matched sequence.
      * @throws RuntimeException If no matching sequence is found or an unexpected value is encountered.
      */
-    public function apply(ScannerInterface $scanner): mixed
+    public function apply(ScannerIterator $scanner): mixed
     {
         $combinators = array_values(array_reverse($this->combinations));
         $callbacks = array_values(array_reverse($this->thenCallbacks));
@@ -93,7 +93,8 @@ final class Combinator implements CombinatorInterface
             $currentPosition = $scanner->index();
             $parsed = [];
             foreach ($sequence as $matcher) {
-                if ($scanner->eof()) {
+                $token = $scanner->token();
+                if ($token === ScannerInterface::EOF) {
                     $scanner->goto($currentPosition);
                     break;
                 }
@@ -112,7 +113,7 @@ final class Combinator implements CombinatorInterface
                 }
 
                 if ($matcher instanceof UnitEnum) {
-                    if ($scanner->lex() === $matcher) {
+                    if ($token === $matcher) {
                         $parsed[] = $scanner->value();
                         $scanner->advance();
                         continue;
@@ -120,7 +121,7 @@ final class Combinator implements CombinatorInterface
                     break;
                 }
 
-                if (is_string($matcher) && ord($matcher) === $scanner->lex()) {
+                if (is_string($matcher) && ord($matcher) === $token) {
                     $parsed[] = $scanner->value();
                     $scanner->advance();
                     continue;

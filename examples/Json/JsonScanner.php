@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Resrap\Examples\Json;
 
@@ -12,43 +12,15 @@ final class JsonScanner implements ScannerInterface
 {
     /** @var list<Token> */
     private array $tokens = [];
+
     /** @var list<string> */
     private array $values = [];
-    private int $pos = 0;
+
+    private int $pos = -1;
 
     public function __construct(private readonly string $input)
     {
         $this->tokenize();
-    }
-
-    public function lex(): int|UnitEnum
-    {
-        return $this->tokens[$this->pos] ?? 0;
-    }
-
-    public function value(): ?string
-    {
-        return $this->values[$this->pos] ?? null;
-    }
-
-    public function advance(): void
-    {
-        $this->pos++;
-    }
-
-    public function goto(int $index): void
-    {
-        $this->pos = $index;
-    }
-
-    public function index(): int
-    {
-        return $this->pos;
-    }
-
-    public function eof(): bool
-    {
-        return $this->pos >= count($this->tokens);
     }
 
     private function tokenize(): void
@@ -151,7 +123,7 @@ final class JsonScanner implements ScannerInterface
             $ch = $s[$i];
             if ($ch === '"') {
                 // decode JSON escapes by leveraging json_decode
-                $decoded = json_decode('"' . $raw . '"');
+                $decoded = json_decode('"'.$raw.'"');
                 if ($decoded === null && $raw !== 'null') {
                     // If decoding failed and it's not actually the literal null, report error
                     $err = json_last_error_msg();
@@ -186,7 +158,7 @@ final class JsonScanner implements ScannerInterface
                     continue;
                 }
                 // simple escape
-                $raw .= "\\" . $next;
+                $raw .= "\\".$next;
                 $i++;
                 continue;
             }
@@ -209,5 +181,20 @@ final class JsonScanner implements ScannerInterface
         $lexeme = $m[0];
         $i += strlen($lexeme);
         return [$lexeme, $i];
+    }
+
+    public function lex(): int|UnitEnum
+    {
+        $this->pos++;
+        if ($this->pos >= count($this->tokens)) {
+            $this->pos--;
+            return ScannerInterface::EOF;
+        }
+        return $this->tokens[$this->pos];
+    }
+
+    public function value(): ?string
+    {
+        return $this->values[$this->pos] ?? null;
     }
 }
