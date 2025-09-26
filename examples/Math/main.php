@@ -1,6 +1,6 @@
 <?php
 
-use Resrap\Component\Impl\ScannerIterator;
+use Resrap\Component\Combinator\ScannerIterator;
 use Resrap\Examples\Math\FakeScanner;
 use Resrap\Examples\Math\Parser\MathExpressionParser;
 

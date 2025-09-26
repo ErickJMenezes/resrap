@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Resrap\Component\Impl;
+namespace Resrap\Component\Combinator;
 
 use Closure;
 use RuntimeException;
@@ -12,17 +12,17 @@ final class PendingSequence
     private bool $closed = false;
 
     /**
-     * @param Closure(Closure(array<array-key, string>): mixed): Combinator $function
+     * @param Closure(Closure(array<array-key, string>): mixed): Parser $function
      */
     public function __construct(private readonly Closure $function) {}
 
     /**
      * @param Closure(array<array-key, string>): mixed $whenMatches
      *
-     * @return Combinator
+     * @return Parser
      * @throws RuntimeException if the callback is already defined and cannot be redefined
      */
-    public function then(Closure $whenMatches): Combinator
+    public function then(Closure $whenMatches): Parser
     {
         if ($this->closed) {
             throw new RuntimeException("Cannot redefine the callback");
@@ -31,7 +31,7 @@ final class PendingSequence
         return ($this->function)($whenMatches);
     }
 
-    public function pass(): Combinator
+    public function pass(): Parser
     {
         return $this->then(fn(array $matches): array => $matches);
     }

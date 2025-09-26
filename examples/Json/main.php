@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Resrap\Component\Impl\ScannerIterator;
+use Resrap\Component\Combinator\ScannerIterator;
 use Resrap\Examples\Json\JsonScanner;
 use Resrap\Examples\Json\Parser\JsonParser;
 

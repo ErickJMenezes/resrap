@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Resrap\Component\Impl;
+namespace Resrap\Component\Combinator;
 
 use Resrap\Component\Spec\ScannerInterface;
 use UnitEnum;

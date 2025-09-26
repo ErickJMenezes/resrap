@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Resrap\Component\Impl;
+namespace Resrap\Component\Combinator;
 
 use Closure;
 use InvalidArgumentException;
@@ -20,10 +20,10 @@ use UnitEnum;
  * The `apply` method processes input using registered sequences and invokes
  * associated callbacks upon successful matches.
  */
-final class Combinator
+final class Parser
 {
     /**
-     * @var array<array-key, array<int, Combinator|UnitEnum|string>>
+     * @var array<array-key, array<int, Parser|UnitEnum|string>>
      */
     private array $combinations = [];
 
@@ -37,12 +37,12 @@ final class Combinator
     /**
      * Creates a pending sequence by evaluating a given sequence of elements.
      *
-     * @param (Closure(): Combinator|UnitEnum|string)|Combinator|UnitEnum|string ...$sequence The sequence of elements
+     * @param (Closure(): Parser|UnitEnum|string)|Parser|UnitEnum|string ...$sequence         The sequence of elements
      *                                                                                        to evaluate.
      *
      * @return PendingSequence A new PendingSequence instance based on the provided sequence.
      */
-    public static function is(Closure|Combinator|UnitEnum|string ...$sequence): PendingSequence
+    public static function is(Closure|Parser|UnitEnum|string ...$sequence): PendingSequence
     {
         return new self()
             ->or(...$sequence);
@@ -51,26 +51,26 @@ final class Combinator
     /**
      * Combines a sequence of elements into a pending sequence.
      *
-     * @param (Closure(): Combinator|UnitEnum|string)|Combinator|UnitEnum|string ...$sequence The sequence of elements
+     * @param (Closure(): Parser|UnitEnum|string)|Parser|UnitEnum|string ...$sequence The sequence of elements
      *                                                                           to combine. At least one element must
      *                                                                           be provided.
      *
      * @return PendingSequence A new PendingSequence instance created with the provided sequence.
      * @throws InvalidArgumentException If the sequence is empty.
      */
-    public function or(Closure|Combinator|UnitEnum|string ...$sequence): PendingSequence
+    public function or(Closure|Parser|UnitEnum|string ...$sequence): PendingSequence
     {
         if (count($sequence) === 0) {
             throw new InvalidArgumentException("The sequence must have at least one element.");
         }
         $sequence = array_map(
             fn($item) => match (true) {
-                $item instanceof Closure => fn(): Combinator|UnitEnum|string => $item(),
+                $item instanceof Closure => fn(): Parser|UnitEnum|string => $item(),
                 default => $item,
             },
             $sequence,
         );
-        return new PendingSequence(function (Closure $whenMatches) use (&$sequence): Combinator {
+        return new PendingSequence(function (Closure $whenMatches) use (&$sequence): Parser {
             $this->combinations = [$sequence, ...$this->combinations];
             $this->thenCallbacks = [$whenMatches, ...$this->thenCallbacks];
             return $this;
@@ -101,7 +101,7 @@ final class Combinator
                     // matcher created lazily to avoid recursive calls
                     $matcher = $matcher();
                 }
-                if ($matcher instanceof Combinator) {
+                if ($matcher instanceof Parser) {
                     try {
                         $parsed[] = $matcher->apply($iterator);
                         continue;

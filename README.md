@@ -33,10 +33,10 @@ require __DIR__ . '/vendor/autoload.php';
 
 ## Core Concepts
 
-- `Combinator` (`Resrap\Component\Impl\Combinator`)
+- `Parser` (`Resrap\Component\Combinator\Parser`)
   - Define one or more alternative sequences with `::is(...)` and `->or(...)`.
   - Finish each sequence by providing a `->then(function(array $matches) { ... })` callback that transforms matched values to your desired output (e.g., AST nodes). Use `->pass()` to return the raw matches.
-  - Apply a combinator to a scanner with `->apply(ScannerInterface $scanner)`.
+  - Apply a parser to a scanner with `->apply(ScannerInterface $scanner)`.
 
 - `PendingSequence` (`Resrap\Component\Impl\PendingSequence`)
   - Returned from `::is()` and `->or(...)` and completed by `->then(...)` or `->pass()`.
@@ -46,10 +46,10 @@ require __DIR__ . '/vendor/autoload.php';
     - `lex(): int|UnitEnum` — returns the next token (as an `enum` case or integer code).
     - `value(): ?string` — returns the current token’s textual value.
 
-### Matching semantics in `Combinator`
+### Matching semantics in `Parser`
 - UnitEnum tokens: If you pass a `UnitEnum` (e.g. an enum case from your token enum), matching uses identity (`===`) against `ScannerInterface::lex()`. On match, the current `value()` is pushed into `$matches` and the scanner advances.
 - Strings (single characters): If you pass a string like `'+'`, the engine compares `ord($matcher)` to `ScannerInterface::lex()`. This is useful when your scanner emits ASCII codes for punctuation. If your scanner returns enums instead (as in the example), prefer matching via enum cases.
-- Nested/recursive combinators: You can include other `Combinator` instances directly in sequences.
+- Nested/recursive parsers: You can include other `Parser` instances directly in sequences.
 
 ## Example: Arithmetic expression parser
 A minimal example is provided under `examples/Math/`. It demonstrates parsing a simple arithmetic expression into an AST using enums for tokens and a fake scanner.
@@ -58,14 +58,14 @@ Key files:
 - `examples/Math/Token.php` — token enum (e.g., `NUMBER`, `PLUS`, `MINUS`, ...)
 - `examples/Math/FakeScanner.php` — toy implementation of `ScannerInterface`
 - `examples/Math/Ast/*` — simple AST node classes
-- `examples/Math/Parser/MathExpressionParser.php` — combinators composing the parser
+- `examples/Math/Parser/MathExpressionParser.php` — parsers composing the parser
 - `examples/Math/main.php` — runnable example
 
 ### Parser definition (excerpt)
 From `examples/Math/Parser/MathExpressionParser.php`:
 
 ```php
-use Resrap\Component\Impl\Combinator;
+use Resrap\Component\Combinator\Parser;
 use Resrap\Examples\Math\Ast\MathExpression;
 use Resrap\Examples\Math\Ast\MathOperator;
 use Resrap\Examples\Math\Ast\Number;
@@ -73,25 +73,25 @@ use Resrap\Examples\Math\Token;
 
 final class MathExpressionParser
 {
-    public static function expression(): Combinator
+    public static function expression(): Parser
     {
-        return Combinator::is(self::number())
+        return Parser::is(self::number())
             ->then(fn(array $m) => $m[0])
-            // `self::expression(...)` self-references this combinator for recursion and avoid infinity loop
+            // `self::expression(...)` self-references this parser for recursion and avoid infinity loop
             ->or(self::number(), self::operator(), self::expression(...))
             ->then(fn(array $m) => new MathExpression([$m[0], $m[1], $m[2]]));
     }
 
-    public static function number(): Combinator
+    public static function number(): Parser
     {
-        return Combinator::is(Token::NUMBER)
+        return Parser::is(Token::NUMBER)
             ->then(fn(array $m) => new Number($m[0]));
     }
 
-    public static function operator(): Combinator
+    public static function operator(): Parser
     {
         $whenMatches = fn(array $m) => new MathOperator($m[0]);
-        return Combinator::is(Token::PLUS)->then($whenMatches)
+        return Parser::is(Token::PLUS)->then($whenMatches)
             ->or(Token::MINUS)->then($whenMatches)
             ->or(Token::MULTIPLY)->then($whenMatches)
             ->or(Token::DIVIDE)->then($whenMatches);
@@ -129,20 +129,20 @@ final class MyScanner implements ScannerInterface {
 }
 ```
 
-3. Compose your grammar with combinators.
+3. Compose your grammar with parsers.
 
 ```php
-use Resrap\Component\Impl\Combinator;
+use Resrap\Component\Combinator\Parser;
 
-$number = fn() => Combinator::is(Token::NUMBER)
+$number = fn() => Parser::is(Token::NUMBER)
     ->then(fn($m) => intval($m[0]));
 
-$operator = fn() => Combinator::is(Token::PLUS)
+$operator = fn() => Parser::is(Token::PLUS)
     ->then(fn($m) => $m[0])
     ->or(Token::MINUS)->then(fn($m) => $m[0]);
 
 $expr = function () use ($number, $operator, &$expr) {
-    return Combinator::is($number())
+    return Parser::is($number())
         ->then(fn($m) => $m[0])
         ->or($number(), $operator(), $expr(...))
         ->then(fn($m) => [$m[0], $m[1], $m[2]])
@@ -152,14 +152,14 @@ $expr = function () use ($number, $operator, &$expr) {
 4. Parse.
 
 ```php
-use Resrap\Component\Impl\ScannerIterator;
+use Resrap\Component\Combinator\ScannerIterator;
 
 $scanner = new MyScanner(/* your input */);
 $ast = $expr()->apply(new ScannerIterator($scanner));
 ```
 
 ## Error handling
-- If no sequence matches at the current position, `Combinator::apply()` throws `RuntimeException` with the unexpected value and the scanner position.
+- If no sequence matches at the current position, `Parser::apply()` throws `RuntimeException` with the unexpected value and the scanner position.
 
 ## Examples
 - `examples/` — runnable examples and demonstration code
