@@ -11,19 +11,13 @@ use UnitEnum;
  * Represents an iterator for scanning and managing tokens and their associated values.
  * Provides methods for lexical scanning, accessing current token values, and managing the position within the token
  * collection.
- *
- * @property-read list<TToken> $tokens A list of tokens that have been scanned and managed by the iterator.
- * @property-read list<string> $values A list of string values associated with the tokens.
- * @property-read int          $pos    The current position in the collection of tokens and values.
- *
- * @template TToken of (UnitEnum|int)
  */
 final class ScannerIterator
 {
-    /** @var list<TToken> */
+    /** @var array<UnitEnum|int> */
     private array $tokens = [];
 
-    /** @var list<string> */
+    /** @var array<string> */
     private array $values = [];
 
     private int $pos = -1;

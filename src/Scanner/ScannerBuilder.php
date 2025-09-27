@@ -51,7 +51,7 @@ final class ScannerBuilder
             if (count($currentPatternSubroutines) > 0) {
                 $currentPattern = "(?(DEFINE)\n".implode("\n", $currentPatternSubroutines).") $currentPattern";
             }
-            $patterns["/$currentPattern/x"] = $matcher->handler;
+            $patterns["/$currentPattern/xs"] = $matcher->handler;
         }
         return $patterns;
     }
