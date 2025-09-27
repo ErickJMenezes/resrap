@@ -4,8 +4,6 @@ declare(strict_types = 1);
 
 namespace Resrap\Component\Scanner;
 
-use Resrap\Component\Combinator\ScannerIterator;
-
 final class ScannerBuilder
 {
     /**

@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Resrap\Component\Scanner;
 
-use Resrap\Component\Combinator\ScannerInterface;
 use UnitEnum;
 
 final class RegexScanner implements ScannerInterface

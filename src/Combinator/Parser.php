@@ -6,6 +6,7 @@ namespace Resrap\Component\Combinator;
 
 use Closure;
 use InvalidArgumentException;
+use Resrap\Component\Scanner\ScannerIteratorInterface;
 use Resrap\Component\Scanner\ScannerToken;
 use RuntimeException;
 use UnitEnum;
@@ -52,8 +53,8 @@ final class Parser
      * Combines a sequence of elements into a pending sequence.
      *
      * @param (Closure(): Parser|UnitEnum|string)|Parser|UnitEnum|string ...$sequence The sequence of elements
-     *                                                                           to combine. At least one element must
-     *                                                                           be provided.
+     *                                                                                to combine. At least one element
+     *                                                                                must be provided.
      *
      * @return PendingSequence A new PendingSequence instance created with the provided sequence.
      * @throws InvalidArgumentException If the sequence is empty.
@@ -81,19 +82,20 @@ final class Parser
      * Applies a sequence of combinators to the provided scanner and executes the corresponding callback if a match is
      * found.
      *
-     * @param ScannerIterator $iterator The scanner iterator that provides methods for navigating and matching tokens.
+     * @param ScannerIteratorInterface $iterator The scanner iterator that provides methods for navigating and matching
+     *                                           tokens.
      *
      * @return mixed The result from the callback associated with the matched sequence.
      * @throws RuntimeException If no matching sequence is found or an unexpected value is encountered.
      */
-    public function apply(ScannerIterator $iterator): mixed
+    public function apply(ScannerIteratorInterface $iterator): mixed
     {
         $lastException = null;
         foreach ($this->combinations as $sKey => $sequence) {
-            $currentPosition = $iterator->index();
+            $currentPosition = $iterator->key();
             $parsed = [];
             foreach ($sequence as $matcher) {
-                $token = $iterator->token();
+                $token = $iterator->current();
                 if ($token === ScannerToken::EOF) {
                     $iterator->goto($currentPosition);
                     break;
@@ -116,7 +118,7 @@ final class Parser
                 if ($matcher instanceof UnitEnum) {
                     if ($token === $matcher) {
                         $parsed[] = $iterator->value();
-                        $iterator->advance();
+                        $iterator->next();
                         continue;
                     }
                     break;
@@ -124,7 +126,7 @@ final class Parser
 
                 if (is_string($matcher) && ord($matcher) === $token) {
                     $parsed[] = $iterator->value();
-                    $iterator->advance();
+                    $iterator->next();
                     continue;
                 }
                 break;

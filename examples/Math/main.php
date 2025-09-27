@@ -36,6 +36,11 @@ $expr = function () use ($number, $operator, &$expr) {
         ->then(fn(array $m) => [$m[0], $m[1], $m[2]]);
 };
 
+foreach ($scannerIt as $key => $token) {
+    echo $key.': '.$token->name."\n";
+}
+$scannerIt->rewind();
+
 $ast = $expr()->apply($scannerIt);
 
 var_dump($ast);

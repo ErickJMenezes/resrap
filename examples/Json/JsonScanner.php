@@ -4,10 +4,10 @@ declare(strict_types = 1);
 
 namespace Resrap\Examples\Json;
 
-use Resrap\Component\Combinator\ScannerIterator;
 use Resrap\Component\Scanner\Pattern;
-use Resrap\Component\Scanner\ScannerToken;
 use Resrap\Component\Scanner\ScannerBuilder;
+use Resrap\Component\Scanner\ScannerIterator;
+use Resrap\Component\Scanner\ScannerToken;
 
 final class JsonScanner
 {
