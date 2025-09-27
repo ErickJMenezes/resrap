@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Resrap\Component\Combinator;
 
+use Resrap\Component\Scanner\ScannerToken;
 use UnitEnum;
 
 /**
@@ -35,7 +36,7 @@ final class ScannerIterator
 
     public function token(): int|UnitEnum
     {
-        return $this->tokens[$this->pos] ?? ScannerInterface::EOF;
+        return $this->tokens[$this->pos] ?? ScannerToken::EOF;
     }
 
     public function value(): ?string

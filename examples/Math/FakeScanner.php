@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Resrap\Examples\Math;
 
 use Resrap\Component\Combinator\ScannerInterface;
+use Resrap\Component\Scanner\ScannerToken;
 use UnitEnum;
 
 class FakeScanner implements ScannerInterface
@@ -42,7 +43,7 @@ class FakeScanner implements ScannerInterface
         $this->pos++;
         if ($this->pos >= count($this->strings)) {
             $this->pos--;
-            return ScannerInterface::EOF;
+            return ScannerToken::EOF;
         }
         return $this->tokens[$this->pos];
     }

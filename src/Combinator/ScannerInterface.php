@@ -14,11 +14,6 @@ use UnitEnum;
 interface ScannerInterface
 {
     /**
-     * Represents the end of the token stream.
-     */
-    public const int EOF = 0;
-
-    /**
      * Retrieves parses the next token and return in a representation of an instance of UnitEnum or int.
      *
      * When the return value is an int, it can be zero, which represents the end of the token stream; or it can be a

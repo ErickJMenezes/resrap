@@ -1,0 +1,55 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace Resrap\Component\Scanner;
+
+use Resrap\Component\Combinator\ScannerInterface;
+use UnitEnum;
+
+final class RegexScanner implements ScannerInterface
+{
+    private ?string $value = null;
+
+    public function __construct(
+        private readonly array $patterns,
+        private string $input,
+    ) {
+    }
+
+    public function lex(): int|UnitEnum
+    {
+        if (strlen($this->input) === 0) {
+            return ScannerToken::EOF;
+        }
+        do {
+            $token = $this->tokenize();
+        } while ($token === ScannerToken::SKIP);
+        if ($token === ScannerToken::ERROR) {
+            throw ScannerException::unexpectedCharacter(substr($this->input, 0, 1));
+        }
+        return $token;
+    }
+
+    private function tokenize(): int|UnitEnum
+    {
+        foreach ($this->patterns as $regexp => $handler) {
+            $matches = [];
+            preg_match($regexp, $this->input, $matches, PREG_OFFSET_CAPTURE | PREG_UNMATCHED_AS_NULL);
+            if (empty($matches[0])) {
+                continue;
+            }
+            $value = $matches[0][0];
+            $handlerResult = ($handler)($value);
+            $this->value = $value;
+            $this->input = substr($this->input, strlen($matches[0][0]));
+            return $handlerResult;
+        }
+        return ScannerToken::ERROR;
+    }
+
+    public function value(): ?string
+    {
+        return $this->value;
+    }
+}

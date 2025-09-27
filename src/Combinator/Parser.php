@@ -6,6 +6,7 @@ namespace Resrap\Component\Combinator;
 
 use Closure;
 use InvalidArgumentException;
+use Resrap\Component\Scanner\ScannerToken;
 use RuntimeException;
 use UnitEnum;
 
@@ -87,12 +88,13 @@ final class Parser
      */
     public function apply(ScannerIterator $iterator): mixed
     {
+        $lastException = null;
         foreach ($this->combinations as $sKey => $sequence) {
             $currentPosition = $iterator->index();
             $parsed = [];
             foreach ($sequence as $matcher) {
                 $token = $iterator->token();
-                if ($token === ScannerInterface::EOF) {
+                if ($token === ScannerToken::EOF) {
                     $iterator->goto($currentPosition);
                     break;
                 }
@@ -104,8 +106,9 @@ final class Parser
                     try {
                         $parsed[] = $matcher->apply($iterator);
                         continue;
-                    } catch (RuntimeException $e) {
+                    } catch (ParserException $e) {
                         $iterator->goto($currentPosition);
+                        $lastException = $e;
                         break;
                     }
                 }
@@ -131,8 +134,6 @@ final class Parser
             }
             $iterator->goto($currentPosition);
         }
-        throw new RuntimeException(
-            "Unexpected value \"{$iterator->value()}\" found at position {$iterator->index()}.",
-        );
+        throw ParserException::noSuitableMatcherFound($lastException);
     }
 }
