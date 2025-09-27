@@ -4,6 +4,10 @@ declare(strict_types = 1);
 
 namespace Resrap\Component\Scanner;
 
+/**
+ * Represents a builder for creating a scanner, allowing the configuration of pattern aliases
+ * and the construction of a scanner capable of processing input based on predefined matchers.
+ */
 final class ScannerBuilder
 {
     /**

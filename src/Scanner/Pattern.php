@@ -24,8 +24,8 @@ final readonly class Pattern
     public Closure $handler;
 
     /**
-     * @param string                               $pattern
-     * @param (UnitEnum|(Closure(): int|UnitEnum)) $handler
+     * @param string                                        $pattern Regex pattern to match.
+     * @param (UnitEnum|(Closure(string&): (int|UnitEnum))) $handler Handler to process matches.
      */
     public function __construct(
         string $pattern,

@@ -6,15 +6,26 @@ namespace Resrap\Component\Scanner;
 
 use UnitEnum;
 
+/**
+ * Represents a scanner that uses regular expressions to tokenize input strings.
+ * Implements the ScannerInterface.
+ *
+ * This class processes a given input string and matches it against a series
+ * of regular expression patterns provided during instantiation. It extracts
+ * tokens based on these patterns and executes corresponding handler functions.
+ */
 final class RegexScanner implements ScannerInterface
 {
     private ?string $value = null;
 
+    /**
+     * @param array<string, Closure(string&): (int|UnitEnum)> $patterns
+     * @param string                                          $input
+     */
     public function __construct(
         private readonly array $patterns,
         private string $input,
-    ) {
-    }
+    ) {}
 
     public function lex(): int|UnitEnum
     {
