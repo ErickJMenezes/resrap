@@ -8,7 +8,7 @@ It's not a framework, but it's a good starting point for building your own parse
 
 ## Installation
 ```bash
-composer require resrap/components
+composer require erickjmenezes/resrap
 ```
 
 ## Examples
