@@ -24,7 +24,7 @@ use UnitEnum;
 final class Parser
 {
     /**
-     * @var array<array-key, array<int, Parser|UnitEnum|string>>
+     * @var array<array-key, array<int, Parser|UnitEnum|(Closure(): (Parser|UnitEnum))>>
      */
     private array $combinations = [];
 
@@ -33,40 +33,29 @@ final class Parser
      */
     private array $thenCallbacks = [];
 
-    private function __construct() {}
-
     /**
-     * Creates a pending sequence by evaluating a given sequence of elements.
-     *
-     * @param (Closure(): Parser|UnitEnum|string)|Parser|UnitEnum|string ...$sequence         The sequence of elements
-     *                                                                                        to evaluate.
-     *
-     * @return PendingSequence A new PendingSequence instance based on the provided sequence.
+     * Initializes a new Parser instance with a given name.
      */
-    public static function is(Closure|Parser|UnitEnum|string ...$sequence): PendingSequence
-    {
-        return new self()
-            ->or(...$sequence);
-    }
+    public function __construct(private readonly string $name) {}
 
     /**
      * Combines a sequence of elements into a pending sequence.
      *
-     * @param (Closure(): Parser|UnitEnum|string)|Parser|UnitEnum|string ...$sequence The sequence of elements
+     * @param (Closure(): (Parser|UnitEnum))|Parser|UnitEnum ...$sequence The sequence of elements
      *                                                                                to combine. At least one element
      *                                                                                must be provided.
      *
      * @return PendingSequence A new PendingSequence instance created with the provided sequence.
      * @throws InvalidArgumentException If the sequence is empty.
      */
-    public function or(Closure|Parser|UnitEnum|string ...$sequence): PendingSequence
+    public function is(Closure|Parser|UnitEnum ...$sequence): PendingSequence
     {
         if (count($sequence) === 0) {
             throw new InvalidArgumentException("The sequence must have at least one element.");
         }
         $sequence = array_map(
             fn($item) => match (true) {
-                $item instanceof Closure => fn(): Parser|UnitEnum|string => $item(),
+                $item instanceof Closure => fn(): Parser|UnitEnum => $item(),
                 default => $item,
             },
             $sequence,

@@ -18,67 +18,73 @@ final class JsonParser
 {
     public static function value(): Parser
     {
-        return Parser::is(self::object(...))
+        return new Parser('json_value')
+            ->is(self::object(...))
             ->then(fn(array $m) => $m[0])
             //
-            ->or(self::array(...))
+            ->is(self::array(...))
             ->then(fn(array $m) => $m[0])
             //
-            ->or(Token::STRING)
+            ->is(Token::STRING)
             ->then(fn(array $m) => new JsonString($m[0]))
             //
-            ->or(Token::NUMBER)
+            ->is(Token::NUMBER)
             ->then(fn(array $m) => new JsonNumber($m[0]))
             //
-            ->or(Token::TRUE)
+            ->is(Token::TRUE)
             ->then(fn(array $m) => new JsonBoolean(true))
             //
-            ->or(Token::FALSE)
+            ->is(Token::FALSE)
             ->then(fn(array $m) => new JsonBoolean(false))
             //
-            ->or(Token::NULL)
+            ->is(Token::NULL)
             ->then(fn(array $m) => new JsonNull());
     }
 
     public static function object(): Parser
     {
-        return Parser::is(Token::LBRACE, Token::RBRACE) // { }
+        return new Parser('json_object')
+            ->is(Token::LBRACE, Token::RBRACE) // { }
             ->then(fn(array $m) => new JsonObject([]))
             // { members }
-            ->or(Token::LBRACE, self::members(), Token::RBRACE)
+            ->is(Token::LBRACE, self::members(), Token::RBRACE)
             ->then(fn(array $m) => new JsonObject($m[1]));
     }
 
     public static function members(): Parser
     {
-        return Parser::is(self::pair(...))
+        return new Parser('json_object_members')
+            ->is(self::pair(...))
             ->then(fn(array $m) => [$m[0]])
             // pair, members
-            ->or(self::pair(...), Token::COMMA, self::members(...))
+            ->is(self::pair(...), Token::COMMA, self::members(...))
             ->then(fn(array $m) => array_merge([$m[0]], $m[2]));
     }
 
     public static function pair(): Parser
     {
-        return Parser::is(Token::STRING, Token::COLON, self::value())
+        return new Parser('json_object_pair')
+            ->is(Token::STRING, Token::COLON, self::value())
             ->then(fn(array $m) => new JsonPair($m[0], $m[2]));
     }
 
     public static function array(): Parser
     {
-        return Parser::is(Token::LBRACKET, Token::RBRACKET) // []
+        return new Parser('json_array')
+            ->is(Token::LBRACKET, Token::RBRACKET) // []
             ->then(fn(array $m) => new JsonArray([]))
             // [ elements ]
-            ->or(Token::LBRACKET, self::elements(...), Token::RBRACKET)
+            ->is(Token::LBRACKET, self::elements(...), Token::RBRACKET)
             ->then(fn(array $m) => new JsonArray($m[1]));
     }
 
     public static function elements(): Parser
     {
-        return Parser::is(self::value(...))
+        return new Parser('json_array_elements')
+            ->is(self::value(...))
             ->then(fn(array $m) => [$m[0]])
             // value , elements
-            ->or(self::value(...), Token::COMMA, self::elements(...))
+            ->is(self::value(...), Token::COMMA, self::elements(...))
             ->then(fn(array $m) => array_merge([$m[0]], $m[2]));
     }
 }

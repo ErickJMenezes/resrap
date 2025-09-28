@@ -3,44 +3,71 @@
 use Resrap\Component\Combinator\Parser;
 use Resrap\Component\Scanner\Pattern;
 use Resrap\Component\Scanner\ScannerBuilder;
+use Resrap\Component\Scanner\ScannerIteratorInterface;
 use Resrap\Component\Scanner\ScannerToken;
 
 require __DIR__.'/../../vendor/autoload.php';
 
-enum Token { case NUMBER; case PLUS; case MINUS; }
-
-$scannerIt = new ScannerBuilder(
-// skip whitespace
-    new Pattern('[\s\t\n\r]+', ScannerToken::SKIP),
-    // tokens
-    new Pattern('{NUMBER}', Token::NUMBER),
-    new Pattern('\+', Token::PLUS),
-    new Pattern('-', Token::MINUS),
-)
-    ->aliases([
-        'NUMBER' => '[0-9]+',
-    ])
-    ->build("12 + 34 - 5");
-
-$number = fn() => Parser::is(Token::NUMBER)
-    ->then(fn(array $m) => intval($m[0]));
-
-$operator = fn() => Parser::is(Token::PLUS)
-    ->then(fn(array $m) => $m[0])
-    ->or(Token::MINUS)->then(fn(array $m) => $m[0]);
-
-$expr = function () use ($number, $operator, &$expr) {
-    return Parser::is($number)
-        ->then(fn(array $m) => $m[0])
-        ->or($number, $operator, $expr)
-        ->then(fn(array $m) => [$m[0], $m[1], $m[2]]);
-};
-
-foreach ($scannerIt as $key => $token) {
-    echo $key.': '.$token->name."\n";
+enum Token
+{
+    case NUMBER;
+    case PLUS;
+    case MINUS;
+    case TIMES;
+    case DIV;
 }
-$scannerIt->rewind();
 
-$ast = $expr()->apply($scannerIt);
+function scanner(string $input): ScannerIteratorInterface
+{
+    return new ScannerBuilder(
+    // skip whitespace
+        new Pattern('[\s\t\n\r]+', ScannerToken::SKIP),
+        // tokens
+        new Pattern('{NUMBER}', Token::NUMBER),
+        new Pattern('\+', Token::PLUS),
+        new Pattern('-', Token::MINUS),
+        new Pattern('\*', Token::TIMES),
+        new Pattern('\\/', Token::DIV),
+    )
+        ->aliases([
+            'NUMBER' => '[0-9]+',
+        ])
+        ->build($input);
+}
 
-var_dump($ast);
+function parser(): Parser
+{
+    // In our grammar, to match the number is as simple as matching a token.
+    $number = new Parser('number')
+        ->is(Token::NUMBER)
+        // Then, when we match a number, we convert it to an integer.
+        // The position zero [0] is the first matched token.
+        ->then(fn(array $m) => intval($m[0]));
+
+    // Same as matching a number, but we match an operator.
+    $operator = new Parser('operator')
+        ->is(Token::PLUS)
+        ->then(fn(array $m) => $m[0])
+        ->is(Token::MINUS)
+        ->then(fn(array $m) => $m[0])
+        ->is(Token::TIMES)
+        ->then(fn(array $m) => $m[0])
+        ->is(Token::DIV)
+        ->then(fn(array $m) => $m[0]);
+
+    // The expression is a number or a number followed by an operator followed by an expression.
+    $expression = new Parser('expression')
+        ->is($number)
+        ->then(fn(array $m) => $m[0]);
+    $expression
+        ->is($number, $operator, $expression)
+        ->then(fn(array $m) => "{$m[0]} {$m[1]} {$m[2]}");
+
+    // Finally, we return the calculator parser, evaluating our math expression.
+    return new Parser("calculator")
+        ->is($expression)
+        ->then(fn(array $m) => eval("return {$m[0]};"));
+}
+
+var_dump(parser()->apply(scanner('3 + 3 * 2 / 2'))); // 3
+
