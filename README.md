@@ -59,8 +59,9 @@ function create_scanner(string $input): ScannerIteratorInterface
 ```
 
 ### 3. Create a parser for your grammar
+
 ```php
-use Resrap\Component\Combinator\Parser;
+use Resrap\Component\Grammar\Parser;
 
 function create_parser(): Parser
 {

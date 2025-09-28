@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Resrap\Component\Combinator;
+namespace Resrap\Component\Grammar;
 
 use Closure;
 use InvalidArgumentException;

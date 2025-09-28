@@ -1,6 +1,6 @@
 <?php
 
-use Resrap\Component\Combinator\Parser;
+use Resrap\Component\Grammar\Parser;
 use Resrap\Component\Scanner\Pattern;
 use Resrap\Component\Scanner\ScannerBuilder;
 use Resrap\Component\Scanner\ScannerIteratorInterface;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Resrap\Examples\Json\Parser;
 
-use Resrap\Component\Combinator\Parser;
+use Resrap\Component\Grammar\Parser;
 use Resrap\Examples\Json\Ast\JsonArray;
 use Resrap\Examples\Json\Ast\JsonBoolean;
 use Resrap\Examples\Json\Ast\JsonNull;
