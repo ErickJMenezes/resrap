@@ -38,12 +38,11 @@ final readonly class Parser
     {
         $result = $this->buildTreeAndApply($this->grammar);
         if (!$result->ok) {
-            throw new ParserException($result->error->format());
+            throw $result->error->toException();
         }
         $current = $this->iterator->current();
         if ($current !== ScannerToken::EOF) {
-            $value = $current instanceof UnitEnum ? $current->name : $this->iterator->value();
-            throw new ParserException("Unexpected token: {$value} at position {$this->iterator->key()}. Expected EOF.");
+            throw ParserException::expectedEof($current, $this->iterator->key());
         }
         return $result->value;
     }

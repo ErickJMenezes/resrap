@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Resrap\Component\Parser;
 
 use RuntimeException;
+use UnitEnum;
 
 /**
  * Represents an exception specific to parsing errors.
@@ -14,4 +15,15 @@ use RuntimeException;
  */
 class ParserException extends RuntimeException
 {
+    public static function expectedEof(UnitEnum $token, int $position): self
+    {
+        return new self("Unexpected token: {$token->name} at position {$position}. Expected EOF.");
+    }
+
+    public static function syntaxError(array $expected, string $actual, int $position): self
+    {
+        $exp = implode(", ", $expected);
+        $msg = "Parse error at position {$position}: expected {$exp}, found '{$actual}'";
+        return new self($msg);
+    }
 }

@@ -29,10 +29,8 @@ final readonly class ParseError
         return $first->position > $second->position ? $first : $second;
     }
 
-    public function format(): string
+    public function toException(): ParserException
     {
-        $exp = implode(", ", $this->expected);
-        return "Parse error at position {$this->position}: ".
-            "expected {$exp}, found '{$this->found}'";
+        return ParserException::syntaxError($this->expected, $this->found, $this->position);
     }
 }
