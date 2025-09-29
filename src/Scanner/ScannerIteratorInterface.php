@@ -32,4 +32,14 @@ interface ScannerIteratorInterface extends Iterator
      * @throws InvalidArgumentException If the specified index could not be accessed.
      */
     public function goto(int $index): void;
+
+    /**
+     * Returns the farthest token and its value.
+     *
+     * Useful when the parser finds a value that cannot be parsed and
+     *
+     * @return array{UnitEnum|int, string|null, int} Token, Value and position.
+     * @author ErickJMenezes <erickmenezes.dev@gmail.com>
+     */
+    public function farthest(): array;
 }

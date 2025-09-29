@@ -10,7 +10,8 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Resrap\\Examples\\": "examples/"
+      "Resrap\\Examples\\": "examples/",
+      "Resrap\\Tests\\": "tests/"
     }
   },
   "authors": [
@@ -22,5 +23,13 @@
   "minimum-stability": "stable",
   "require": {
     "php": "^8.4"
+  },
+  "require-dev": {
+    "pestphp/pest": "^4.1"
+  },
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
   }
 }

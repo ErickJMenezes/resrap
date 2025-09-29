@@ -1,9 +1,10 @@
 <?php
 
-use Resrap\Component\Grammar\Parser;
+use Resrap\Component\Parser\Parser;
+use Resrap\Component\Parser\GrammarRule;
 use Resrap\Component\Scanner\Pattern;
 use Resrap\Component\Scanner\ScannerBuilder;
-use Resrap\Component\Scanner\ScannerIteratorInterface;
+use Resrap\Component\Scanner\ScannerInterface;
 use Resrap\Component\Scanner\ScannerToken;
 
 require __DIR__.'/../../vendor/autoload.php';
@@ -17,7 +18,7 @@ enum Token
     case DIV;
 }
 
-function scanner(string $input): ScannerIteratorInterface
+function scanner(string $input): ScannerInterface
 {
     return new ScannerBuilder(
     // skip whitespace
@@ -35,17 +36,17 @@ function scanner(string $input): ScannerIteratorInterface
         ->build($input);
 }
 
-function parser(): Parser
+function grammar(): GrammarRule
 {
     // In our grammar, to match the number is as simple as matching a token.
-    $number = new Parser('number')
+    $number = new GrammarRule('number')
         ->is(Token::NUMBER)
         // Then, when we match a number, we convert it to an integer.
         // The position zero [0] is the first matched token.
         ->then(fn(array $m) => intval($m[0]));
 
     // Same as matching a number, but we match an operator.
-    $operator = new Parser('operator')
+    $operator = new GrammarRule('operator')
         ->is(Token::PLUS)
         ->then(fn(array $m) => $m[0])
         ->is(Token::MINUS)
@@ -56,7 +57,7 @@ function parser(): Parser
         ->then(fn(array $m) => $m[0]);
 
     // The expression is a number or a number followed by an operator followed by an expression.
-    $expression = new Parser('expression')
+    $expression = new GrammarRule('expression')
         ->is($number)
         ->then(fn(array $m) => $m[0]);
     $expression
@@ -64,10 +65,14 @@ function parser(): Parser
         ->then(fn(array $m) => "{$m[0]} {$m[1]} {$m[2]}");
 
     // Finally, we return the calculator parser, evaluating our math expression.
-    return new Parser("calculator")
+    return new GrammarRule("calculator")
         ->is($expression)
         ->then(fn(array $m) => eval("return {$m[0]};"));
 }
 
-var_dump(parser()->apply(scanner('3 + 3 * 2 / 2'))); // 3
+$parser = new Parser(
+    scanner('3 + 3 * 2 / 2'),
+    grammar(),
+);
 
+var_dump($parser->parse());

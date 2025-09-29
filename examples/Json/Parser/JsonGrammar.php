@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Resrap\Examples\Json\Parser;
 
-use Resrap\Component\Grammar\Parser;
+use Resrap\Component\Parser\GrammarRule;
 use Resrap\Examples\Json\Ast\JsonArray;
 use Resrap\Examples\Json\Ast\JsonBoolean;
 use Resrap\Examples\Json\Ast\JsonNull;
@@ -14,11 +14,11 @@ use Resrap\Examples\Json\Ast\JsonPair;
 use Resrap\Examples\Json\Ast\JsonString;
 use Resrap\Examples\Json\Token;
 
-final class JsonParser
+final class JsonGrammar
 {
-    public static function value(): Parser
+    public static function value(): GrammarRule
     {
-        return new Parser('json_value')
+        return new GrammarRule('json_value')
             ->is(self::object(...))
             ->then(fn(array $m) => $m[0])
             //
@@ -41,9 +41,9 @@ final class JsonParser
             ->then(fn(array $m) => new JsonNull());
     }
 
-    public static function object(): Parser
+    public static function object(): GrammarRule
     {
-        return new Parser('json_object')
+        return new GrammarRule('json_object')
             ->is(Token::LBRACE, Token::RBRACE) // { }
             ->then(fn(array $m) => new JsonObject([]))
             // { members }
@@ -51,9 +51,9 @@ final class JsonParser
             ->then(fn(array $m) => new JsonObject($m[1]));
     }
 
-    public static function members(): Parser
+    public static function members(): GrammarRule
     {
-        return new Parser('json_object_members')
+        return new GrammarRule('json_object_members')
             ->is(self::pair(...))
             ->then(fn(array $m) => [$m[0]])
             // pair, members
@@ -61,16 +61,16 @@ final class JsonParser
             ->then(fn(array $m) => array_merge([$m[0]], $m[2]));
     }
 
-    public static function pair(): Parser
+    public static function pair(): GrammarRule
     {
-        return new Parser('json_object_pair')
+        return new GrammarRule('json_object_pair')
             ->is(Token::STRING, Token::COLON, self::value())
             ->then(fn(array $m) => new JsonPair($m[0], $m[2]));
     }
 
-    public static function array(): Parser
+    public static function array(): GrammarRule
     {
-        return new Parser('json_array')
+        return new GrammarRule('json_array')
             ->is(Token::LBRACKET, Token::RBRACKET) // []
             ->then(fn(array $m) => new JsonArray([]))
             // [ elements ]
@@ -78,9 +78,9 @@ final class JsonParser
             ->then(fn(array $m) => new JsonArray($m[1]));
     }
 
-    public static function elements(): Parser
+    public static function elements(): GrammarRule
     {
-        return new Parser('json_array_elements')
+        return new GrammarRule('json_array_elements')
             ->is(self::value(...))
             ->then(fn(array $m) => [$m[0]])
             // value , elements

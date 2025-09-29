@@ -26,12 +26,42 @@ final class ScannerIterator implements ScannerIteratorInterface
 
     private int $pos = -1;
 
-    private int $highestAdvance = -1;
+    private int $farthestAdvance = -1;
 
     public function __construct(
         private readonly ScannerInterface $scanner,
     ) {
-        $this->next();
+        $this->advance();
+    }
+
+    public function next(): void
+    {
+        if ($this->current() === ScannerToken::EOF) {
+            return;
+        }
+        $this->advance();
+    }
+
+    public function current(): int|UnitEnum
+    {
+        return $this->tokens[$this->pos] ?? ScannerToken::EOF;
+    }
+
+    private function advance(): void
+    {
+        if ($this->isCurrentlyAtFarthestPosition()) {
+            $this->farthestAdvance++;
+        }
+        $this->tokens[++$this->pos] ??= $this->scanner->lex();
+        if ($this->current() === ScannerToken::EOF) {
+            return;
+        }
+        $this->values[$this->pos] ??= $this->scanner->value();
+    }
+
+    private function isCurrentlyAtFarthestPosition(): bool
+    {
+        return $this->pos === $this->farthestAdvance;
     }
 
     public function value(): ?string
@@ -41,24 +71,12 @@ final class ScannerIterator implements ScannerIteratorInterface
 
     public function goto(int $index): void
     {
-        if ($index > $this->highestAdvance || $index < 0) {
-            throw new InvalidArgumentException("Cannot goto to a index that wasn't previously advanced or is negative.");
+        if ($index > $this->farthestAdvance || $index < 0) {
+            throw new InvalidArgumentException(
+                "Cannot goto to a index that wasn't previously advanced or is negative.",
+            );
         }
         $this->pos = $index;
-    }
-
-    public function current(): int|UnitEnum
-    {
-        return $this->tokens[$this->pos] ?? ScannerToken::EOF;
-    }
-
-    public function next(): void
-    {
-        if ($this->pos === $this->highestAdvance) {
-            $this->highestAdvance++;
-        }
-        $this->tokens[++$this->pos] ??= $this->scanner->lex();
-        $this->values[$this->pos] ??= $this->scanner->value();
     }
 
     public function key(): int
@@ -74,5 +92,10 @@ final class ScannerIterator implements ScannerIteratorInterface
     public function rewind(): void
     {
         $this->pos = 0;
+    }
+
+    public function farthest(): array
+    {
+        return [$this->tokens[$this->farthestAdvance], $this->values[$this->farthestAdvance], $this->farthestAdvance];
     }
 }

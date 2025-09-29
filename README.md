@@ -46,7 +46,7 @@ enum Token {
 
 ### 2. Create a Scanner
 ```php
-use Resrap\Component\Scanner\{ScannerIteratorInterface, ScannerBuilder, Pattern, ScannerToken};
+use Resrap\Component\Scanner\{ScannerInterface, ScannerBuilder, Pattern, ScannerToken};
 
 function create_scanner(string $input): ScannerIteratorInterface
 {
@@ -58,37 +58,41 @@ function create_scanner(string $input): ScannerIteratorInterface
 }
 ```
 
-### 3. Create a parser for your grammar
+### 3. Create grammar rules to parse your tokens
 
 ```php
-use Resrap\Component\Grammar\Parser;
+use Resrap\Component\Parser\GrammarRule;
 
-function create_parser(): Parser
+function create_grammar(): GrammarRule
 {
-    // define the grammar and the parser for a number.
-    // the number is just a match of a Token::NUMBER.
-    $number = new Parser('number')
+    // number := T_NUMBER
+    $number = new GrammarRule('number')
         ->is(Token::NUMBER)
-        ->then(fn(array $m) => (int) $m[0]);   // return first matched token in the sequence
+        // return the value of the first matched token
+        ->then(fn(array $m) => (int) $m[0]);
 
-    $expression = new Parser('add_two_numbers')
-        // if the expression is just a number, return it
+    // add := number | number T_PLUS add
+    $add = new GrammarRule('add')
+        // number
         ->is($number)
         ->then(fn(array $m) => $m[0]);
-    // Now, to wrap everything up, we can say that our expression
-    // is a number plus another expression
-    $expression
-        ->is($number, Token::PLUS, $expression)
+    $add
+        // number T_PLUS add
+        ->is($number, Token::PLUS, $add)
         ->then(fn(array $m) => $m[0] + $m[2]);
 
-    return $expression;
+    return $add;
 }
 ```
 
 ### 4. Parse the input
+
 ```php
+use Resrap\Component\Parser\Parser;
+
 $scanner = create_scanner('1 + 2 + 3');
-$parser = create_parser();
-echo $parser->apply($scanner); // 6
+$grammar = create_grammar();
+$parser = new Parser($scanner, $grammar);
+echo $parser->parse(); // 6
 ```
 
