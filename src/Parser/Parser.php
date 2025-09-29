@@ -19,23 +19,23 @@ use UnitEnum;
  * The class handles the parsing process
  * recursively, applying rules and generating structured output or errors as needed.
  */
-final readonly class Parser
+final class Parser
 {
     private ScannerIteratorInterface $iterator;
 
-    private GrammarRule $grammar;
-
     private GrammarTreeBuilder $grammarTreeBuilder;
 
-    public function __construct(ScannerInterface $scanner, GrammarRule $grammar)
-    {
-        $this->iterator = new ScannerIterator($scanner);
-        $this->grammar = $grammar;
+    public function __construct(
+        private ScannerInterface $scanner,
+        private GrammarRule $grammar,
+    ) {
         $this->grammarTreeBuilder = new GrammarTreeBuilder();
     }
 
-    public function parse(): mixed
+    public function parse(string $input): mixed
     {
+        $this->scanner->setInput($input);
+        $this->iterator = new ScannerIterator($this->scanner);
         $result = $this->buildTreeAndApply($this->grammar);
         if (!$result->ok) {
             throw $result->error->toException();

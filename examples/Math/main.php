@@ -18,7 +18,7 @@ enum Token
     case DIV;
 }
 
-function scanner(string $input): ScannerInterface
+function scanner(): ScannerInterface
 {
     return new ScannerBuilder(
     // skip whitespace
@@ -33,7 +33,7 @@ function scanner(string $input): ScannerInterface
         ->aliases([
             'NUMBER' => '[0-9]+',
         ])
-        ->build($input);
+        ->build();
 }
 
 function grammar(): GrammarRule
@@ -70,9 +70,6 @@ function grammar(): GrammarRule
         ->then(fn(array $m) => eval("return {$m[0]};"));
 }
 
-$parser = new Parser(
-    scanner('3 + 3 * 2 / 2'),
-    grammar(),
-);
+$parser = new Parser(scanner(), grammar());
 
-var_dump($parser->parse());
+var_dump($parser->parse('3 + 3 * 2 / 2'));

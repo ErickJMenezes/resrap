@@ -33,9 +33,9 @@ final class ScannerBuilder
         return $this;
     }
 
-    public function build(string $input): ScannerInterface
+    public function build(): ScannerInterface
     {
-        return new RegexScanner($this->preparePatterns(), $input);
+        return new RegexScanner($this->preparePatterns());
     }
 
     private function preparePatterns(): array

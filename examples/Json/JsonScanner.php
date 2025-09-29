@@ -11,7 +11,7 @@ use Resrap\Component\Scanner\ScannerToken;
 
 final class JsonScanner
 {
-    public static function build(string $input): ScannerInterface
+    public static function build(): ScannerInterface
     {
         return new ScannerBuilder(
             new Pattern("\{", Token::LBRACE),
@@ -34,6 +34,6 @@ final class JsonScanner
                 'STRING' => '\"([^\\"]|\["\/bfnrt]|\\\\u[0-9a-fA-F]{4})*\"',
                 'NUMBER' => '-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?',
             ])
-            ->build($input);
+            ->build();
     }
 }

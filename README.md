@@ -48,13 +48,13 @@ enum Token {
 ```php
 use Resrap\Component\Scanner\{ScannerInterface, ScannerBuilder, Pattern, ScannerToken};
 
-function create_scanner(string $input): ScannerIteratorInterface
+function create_scanner(): ScannerIteratorInterface
 {
     return new ScannerBuilder(
         new Pattern('\d+', Token::NUMBER),
         new Pattern('\+', Token::PLUS),
         new Pattern('[\s\r\t\n]++', ScannerToken::SKIP),
-    )->build($input);
+    )->build();
 }
 ```
 
@@ -90,9 +90,9 @@ function create_grammar(): GrammarRule
 ```php
 use Resrap\Component\Parser\Parser;
 
-$scanner = create_scanner('1 + 2 + 3');
+$scanner = create_scanner();
 $grammar = create_grammar();
 $parser = new Parser($scanner, $grammar);
-echo $parser->parse(); // 6
+echo $parser->parse('1 + 2 + 3'); // 6
 ```
 

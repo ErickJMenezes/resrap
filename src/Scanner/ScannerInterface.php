@@ -29,4 +29,13 @@ interface ScannerInterface
      * @return string|null Returns the value if available, or null otherwise.
      */
     public function value(): ?string;
+
+    /**
+     * Sets the input string to be processed or used.
+     *
+     * @param string $input The input value to be set.
+     *
+     * @return void
+     */
+    public function setInput(string $input): void;
 }

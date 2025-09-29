@@ -18,14 +18,15 @@ final class RegexScanner implements ScannerInterface
 {
     private ?string $value = null;
 
+    private string $input;
+
     /**
      * @param array<string, Closure(string&): (int|UnitEnum)> $patterns
-     * @param string                                          $input
      */
-    public function __construct(
-        private readonly array $patterns,
-        private string $input,
-    ) {}
+    public function __construct(private readonly array $patterns)
+    {
+        $this->input = '';
+    }
 
     public function lex(): UnitEnum
     {
@@ -61,5 +62,11 @@ final class RegexScanner implements ScannerInterface
     public function value(): ?string
     {
         return $this->value;
+    }
+
+    public function setInput(string $input): void
+    {
+        $this->input = $input;
+        $this->value = null;
     }
 }
