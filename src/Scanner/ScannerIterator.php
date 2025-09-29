@@ -13,12 +13,10 @@ use UnitEnum;
  *
  * This class maintains the current position in the token stream, processes tokens
  * via the scanner, and offers methods to retrieve both tokens and their associated values.
- *
- * @template-implements Iterator<int, UnitEnum|int>
  */
 final class ScannerIterator implements ScannerIteratorInterface
 {
-    /** @var array<UnitEnum|int> */
+    /** @var array<UnitEnum> */
     private array $tokens = [];
 
     /** @var array<string> */
@@ -42,7 +40,7 @@ final class ScannerIterator implements ScannerIteratorInterface
         $this->advance();
     }
 
-    public function current(): int|UnitEnum
+    public function current(): UnitEnum
     {
         return $this->tokens[$this->pos] ?? ScannerToken::EOF;
     }

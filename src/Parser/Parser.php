@@ -93,7 +93,7 @@ final readonly class Parser
                 $parsed[] = $this->iterator->value();
                 $this->iterator->next();
             } elseif (is_string($matcher)) {
-                if (ord($matcher) !== $token) {
+                if ($matcher !== $this->iterator->value()) {
                     $furthestError = ParseError::furthestBetween($furthestError, new ParseError(
                         $this->iterator->key(),
                         $this->iterator->value(),

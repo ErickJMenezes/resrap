@@ -19,9 +19,9 @@ interface ScannerInterface
      * When the return value is an int, it can be zero, which represents the end of the token stream; or it can be a
      * literal character {@see ord()} value.
      *
-     * @return UnitEnum|int The token as a UnitEnum instance, or int.
+     * @return UnitEnum The token as a UnitEnum instance.
      */
-    public function lex(): int|UnitEnum;
+    public function lex(): UnitEnum;
 
     /**
      * Retrieves the string value represented by the current token.

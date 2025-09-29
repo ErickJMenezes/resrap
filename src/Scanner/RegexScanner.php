@@ -27,7 +27,7 @@ final class RegexScanner implements ScannerInterface
         private string $input,
     ) {}
 
-    public function lex(): int|UnitEnum
+    public function lex(): UnitEnum
     {
         if (strlen($this->input) === 0) {
             return ScannerToken::EOF;

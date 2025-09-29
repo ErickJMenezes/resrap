@@ -12,7 +12,7 @@ use UnitEnum;
  * Extended iterator to be used by a parser.
  * Provides methods to retrieve the current token value and move to a specific index.
  *
- * @template-extends Iterator<int, UnitEnum|int>
+ * @template-extends Iterator<int, UnitEnum>
  */
 interface ScannerIteratorInterface extends Iterator
 {
