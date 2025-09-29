@@ -8,7 +8,7 @@ use Resrap\Examples\Json\Parser\JsonGrammar;
 
 require __DIR__ . '/../../vendor/autoload.php';
 
-$json = $argv[1] ?? '{"name":"Alice","age":30,"isMember":true,"favorites":["apples", "bananas"],"meta":{"height":1.68,"active":false,"tags":null}}';
+$json = '{"name":"Alice","age":30,"isMember":true,"favorites":["apples", "bananas"],"meta":{"height":1.68,"active":false,"tags":null}}';
 
 $scanner = JsonScanner::build($json);
 $grammar = JsonGrammar::value();

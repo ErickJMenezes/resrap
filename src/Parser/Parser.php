@@ -11,13 +11,20 @@ use Resrap\Component\Scanner\ScannerIterator;
 use Resrap\Component\Scanner\ScannerIteratorInterface;
 use UnitEnum;
 
-final class Parser
+/**
+ * The Parser class is responsible for parsing input data based on a given grammar.
+ * It uses a scanner to iterate through input tokens and a grammar tree builder
+ * to match and process the grammar rules.
+ * The class handles the parsing process
+ * recursively, applying rules and generating structured output or errors as needed.
+ */
+final readonly class Parser
 {
-    private readonly ScannerIteratorInterface $iterator;
+    private ScannerIteratorInterface $iterator;
 
-    private readonly GrammarRule $grammar;
+    private GrammarRule $grammar;
 
-    private readonly GrammarTreeBuilder $grammarTreeBuilder;
+    private GrammarTreeBuilder $grammarTreeBuilder;
 
     public function __construct(ScannerInterface $scanner, GrammarRule $grammar)
     {
@@ -28,28 +35,32 @@ final class Parser
 
     public function parse(): mixed
     {
-        $tree = $this->grammarTreeBuilder->build($this->grammar);
-        $result = $this->apply($tree);
-        return $result;
+        $result = $this->buildTreeAndApply($this->grammar);
+        if (!$result->ok) {
+            throw new ParserException($result->error->format());
+        }
+        return $result->value;
     }
 
-    private function buildTreeAndApply(GrammarRule $grammar): mixed
+    private function buildTreeAndApply(GrammarRule $grammar): ParseResult
     {
         return $this->apply($this->grammarTreeBuilder->build($grammar));
     }
 
-    private function apply(GrammarTree $trie)
+    private function apply(GrammarTree $trie): ParseResult
     {
         return $this->iterateChildren($trie->children);
     }
 
     /**
      * @param array<GrammarTree> $children
+     * @param array              $carry
      *
-     * @return mixed|ParserToken
+     * @return ParseResult
      */
-    private function iterateChildren(array $children, array $carry = []): mixed
+    private function iterateChildren(array $children, array $carry = []): ParseResult
     {
+        $furthestError = null;
         $startPosition = $this->iterator->key();
         $parsed = $carry;
         foreach ($children as $child) {
@@ -58,19 +69,30 @@ final class Parser
 
             if ($matcher instanceof GrammarRule) {
                 $macherResult = $this->buildTreeAndApply($matcher);
-                if ($macherResult === ParserToken::EXHAUSTED) {
+                if (!$macherResult->ok) {
+                    $furthestError = ParseError::furthestBetween($furthestError, $macherResult->error);
                     $this->iterator->goto($startPosition);
                     continue;
                 }
-                $parsed[] = $macherResult;
+                $parsed[] = $macherResult->value;
             } elseif ($matcher instanceof UnitEnum) {
                 if ($token !== $matcher) {
+                    $furthestError = ParseError::furthestBetween($furthestError, new ParseError(
+                        $this->iterator->key(),
+                        $token instanceof UnitEnum ? $token->name : $this->iterator->value(),
+                        [$matcher->name]
+                    ));
                     continue;
                 }
                 $parsed[] = $this->iterator->value();
                 $this->iterator->next();
             } elseif (is_string($matcher)) {
                 if (ord($matcher) !== $token) {
+                    $furthestError = ParseError::furthestBetween($furthestError, new ParseError(
+                        $this->iterator->key(),
+                        $this->iterator->value(),
+                        [$matcher]
+                    ));
                     continue;
                 }
                 $parsed[] = $this->iterator->value();
@@ -78,14 +100,19 @@ final class Parser
             }
             if (count($child->children) > 0) {
                 $childResult = $this->iterateChildren($child->children, $parsed);
-                if ($childResult !== ParserToken::EXHAUSTED) {
+                if ($childResult->ok) {
                     return $childResult;
                 }
+                $furthestError = ParseError::furthestBetween($furthestError, $childResult->error);
             }
             if ($child->isTerminal) {
-                return ($child->callback)($parsed);
+                return ParseResult::success(($child->callback)($parsed));
             }
         }
-        return ParserToken::EXHAUSTED;
+        return ParseResult::failure($furthestError ?? new ParseError(
+            $this->iterator->key(),
+            $this->iterator->value(),
+            ['<unknown>'],
+        ));
     }
 }
