@@ -21,7 +21,7 @@ final class RegexScanner implements ScannerInterface
     private string $input;
 
     /**
-     * @param array<string, Closure(string&): (int|UnitEnum)> $patterns
+     * @param array<string, Closure(string&,array): (int|UnitEnum)> $patterns
      */
     public function __construct(private readonly array $patterns)
     {
@@ -50,10 +50,11 @@ final class RegexScanner implements ScannerInterface
             if (empty($matches[0])) {
                 continue;
             }
-            $value = $matches[0];
-            $handlerResult = ($handler)($value);
+            $value = array_shift($matches);
+            $size = strlen($value);
+            $handlerResult = ($handler)($value, $matches);
             $this->value = $value;
-            $this->input = substr($this->input, strlen($matches[0]));
+            $this->input = substr($this->input, $size);
             return $handlerResult;
         }
         return ScannerToken::ERROR;

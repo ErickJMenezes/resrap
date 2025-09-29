@@ -25,7 +25,7 @@ final readonly class Pattern
 
     /**
      * @param string                                        $pattern Regex pattern to match.
-     * @param (UnitEnum|(Closure(string&): UnitEnum)) $handler Handler to process matches.
+     * @param (UnitEnum|(Closure(string&,array): UnitEnum)) $handler Handler to process matches.
      */
     public function __construct(
         string $pattern,
@@ -34,7 +34,10 @@ final readonly class Pattern
         $this->pattern = $pattern;
         $this->handler = match (true) {
             $handler instanceof UnitEnum => fn(): UnitEnum => $handler,
-            default => fn(string &$match): UnitEnum => $handler($match),
+            default => fn(string &$match, array $captureGroups): UnitEnum => $handler(
+                $match,
+                $captureGroups,
+            ),
         };
     }
 }
