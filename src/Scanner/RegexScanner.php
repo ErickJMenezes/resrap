@@ -46,14 +46,14 @@ final class RegexScanner implements ScannerInterface
     {
         foreach ($this->patterns as $regexp => $handler) {
             $matches = [];
-            preg_match($regexp, $this->input, $matches, PREG_OFFSET_CAPTURE | PREG_UNMATCHED_AS_NULL);
+            preg_match($regexp, $this->input, $matches);
             if (empty($matches[0])) {
                 continue;
             }
-            $value = $matches[0][0];
+            $value = $matches[0];
             $handlerResult = ($handler)($value);
             $this->value = $value;
-            $this->input = substr($this->input, strlen($matches[0][0]));
+            $this->input = substr($this->input, strlen($matches[0]));
             return $handlerResult;
         }
         return ScannerToken::ERROR;

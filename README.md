@@ -48,7 +48,7 @@ enum Token {
 ```php
 use Resrap\Component\Scanner\{ScannerInterface, ScannerBuilder, Pattern, ScannerToken};
 
-function create_scanner(): ScannerIteratorInterface
+function create_scanner(): ScannerInterface
 {
     return new ScannerBuilder(
         new Pattern('\d+', Token::NUMBER),
