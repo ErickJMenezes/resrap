@@ -16,7 +16,7 @@ final class EbnfGrammar
     public static function file(): GrammarRule
     {
         return new GrammarRule('grammar_file')
-            ->is(EbnfToken::CLASSNAME, self::useList(...), self::listOfGrammarDefinitions(...))
+            ->is(self::className(...), self::useStatementList(...), self::listOfGrammarDefinitions(...))
             ->then(fn(array $m) => new GrammarFile(
                 $m[0],
                 $m[1],
@@ -24,16 +24,27 @@ final class EbnfGrammar
             ));
     }
 
-    public static function useList(): GrammarRule
+    public static function className(): GrammarRule
     {
-        return new GrammarRule('use_list')
+        return new GrammarRule('class_name')
+            ->is(EbnfToken::CLASSNAME, EbnfToken::IDENTIFIER)
+            ->then(fn(array $m) => $m[1]);
+    }
+
+    public static function useStatement(): GrammarRule
+    {
+        return new GrammarRule('use_statement')
+            ->is(EbnfToken::USE, EbnfToken::QUALIFIED_IDENTIFIER)
+            ->then(fn(array $m) => new UseStatement($m[1]));
+    }
+
+    public static function useStatementList(): GrammarRule
+    {
+        return new GrammarRule('use_statement_list')
             ->is()
             ->then(fn(array $m) => [])
-            ->is(EbnfToken::USE, self::useList(...))
-            ->then(fn(array $m) => [
-                new UseStatement($m[0]),
-                ...$m[1],
-            ]);
+            ->is(self::useStatement(...), self::useStatementList(...))
+            ->then(fn(array $m) => [$m[0], ...$m[1]]);
     }
 
     public static function listOfGrammarDefinitions(): GrammarRule
@@ -63,6 +74,8 @@ final class EbnfGrammar
     public static function ruleIdentifier(): GrammarRule
     {
         return new GrammarRule('rule_identifier')
+            ->is(EbnfToken::QUALIFIED_IDENTIFIER, EbnfToken::STATIC_ACCESS, EbnfToken::IDENTIFIER)
+            ->then(fn(array $m) => new RuleToken("{$m[0]}::{$m[1]}", false))
             ->is(EbnfToken::IDENTIFIER)
             ->then(fn(array $m) => new RuleToken($m[0], false))
             ->is(EbnfToken::CHAR)

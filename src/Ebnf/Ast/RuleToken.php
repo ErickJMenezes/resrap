@@ -10,4 +10,9 @@ final readonly class RuleToken implements Node
         public string $value,
         public bool $literal,
     ) {}
+
+    public function compile(): string
+    {
+        // TODO: Implement compile() method.
+    }
 }

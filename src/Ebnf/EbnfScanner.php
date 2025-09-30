@@ -37,7 +37,7 @@ final class EbnfScanner
             }),
 
             // Identifiers
-            new Pattern('[a-zA-Z_][a-zA-Z0-9_]*', EbnfToken::IDENTIFIER),
+            new Pattern('{IDENTIFIER}', EbnfToken::IDENTIFIER),
 
             // Code blocks (semantic actions) → everything inside `{ ... }`
             // NOTE: This should come *after* structural `{` so it's only used
@@ -55,16 +55,15 @@ final class EbnfScanner
             }),
 
             // Classnames
-            new Pattern('(?:%classname|%class){WS}({CLASSNAME})', function (string &$value, array $groups) {
-                $value = $groups[0];
-                return EbnfToken::CLASSNAME;
-            }),
+            new Pattern('(?:%classname|%class)', EbnfToken::CLASSNAME),
 
             // Use
-            new Pattern('(?:%use|%import){WS}({QUALIFIED_CLASSNAME})', function (string &$value, array $groups) {
-                $value = $groups[0];
-                return EbnfToken::USE;
-            }),
+            new Pattern('(?:%use|%import)', EbnfToken::USE),
+
+            // Static access
+            new Pattern('\:\:', EbnfToken::STATIC_ACCESS),
+
+            new Pattern('{QUALIFIED_IDENTIFIER}', EbnfToken::QUALIFIED_IDENTIFIER),
 
             // Single-line comments
             new Pattern('\/\/[^\n]*', ScannerToken::SKIP),
@@ -76,8 +75,8 @@ final class EbnfScanner
             new Pattern('{WS}', ScannerToken::SKIP),
         )
             ->aliases([
-                'CLASSNAME' => '[a-zA-Z_][a-zA-Z0-9_]*',
-                'QUALIFIED_CLASSNAME' => '(?:[\\\\]{0,1}[a-zA-Z_][a-zA-Z0-9_]*)+',
+                'IDENTIFIER' => '[a-zA-Z_][a-zA-Z0-9_]*',
+                'QUALIFIED_IDENTIFIER' => '(?:[\\\\]{0,1}[a-zA-Z_][a-zA-Z0-9_]*)+',
                 'WS' => '[\s\t\n\r]+',
             ])
             ->build();

@@ -13,4 +13,9 @@ final readonly class UseStatement implements Node
     public function __construct(
         public string $name,
     ) {}
+
+    public function compile(): string
+    {
+        return "use $this->name;";
+    }
 }
