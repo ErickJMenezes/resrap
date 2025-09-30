@@ -54,21 +54,21 @@ final class Parser
 
     private function apply(GrammarTree $trie): ParseResult
     {
-        return $this->iterateChildren($trie->children);
+        return $this->iterateChildren($trie);
     }
 
     /**
-     * @param array<GrammarTree> $children
-     * @param array              $carry
+     * @param GrammarTree $trie
+     * @param array       $carry
      *
      * @return ParseResult
      */
-    private function iterateChildren(array $children, array $carry = []): ParseResult
+    private function iterateChildren(GrammarTree $trie, array $carry = []): ParseResult
     {
         $furthestError = null;
         $startPosition = $this->iterator->key();
         $parsed = $carry;
-        foreach ($children as $child) {
+        foreach ($trie->children as $child) {
             $token = $this->iterator->current();
             $matcher = $child->matcher;
 
@@ -104,7 +104,7 @@ final class Parser
                 $this->iterator->next();
             }
             if (count($child->children) > 0) {
-                $childResult = $this->iterateChildren($child->children, $parsed);
+                $childResult = $this->iterateChildren($child, $parsed);
                 if ($childResult->ok) {
                     return $childResult;
                 }
@@ -113,6 +113,9 @@ final class Parser
             if ($child->isTerminal) {
                 return ParseResult::success(($child->callback)($parsed));
             }
+        }
+        if ($trie->isTerminal) {
+            return ParseResult::success(($trie->callback)($parsed));
         }
         return ParseResult::failure($furthestError ?? new ParseError(
             $this->iterator->key(),

@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace Resrap\Component\Parser;
 
 use Closure;
-use InvalidArgumentException;
 use UnitEnum;
 
 /**
@@ -31,18 +30,13 @@ final class GrammarRule
     /**
      * Combines a sequence of elements into a pending sequence.
      *
-     * @param (Closure(): (GrammarRule|UnitEnum|string))|GrammarRule|UnitEnum|string ...$sequence The sequence of elements
-     *                                                                                to combine. At least one element
-     *                                                                                must be provided.
+     * @param (Closure(): (GrammarRule|UnitEnum|string))|GrammarRule|UnitEnum|string ...$sequence The sequence of
+     *                                                                               elements to combine.
      *
      * @return PendingSequence A new PendingSequence instance created with the provided sequence.
-     * @throws InvalidArgumentException If the sequence is empty.
      */
     public function is(Closure|GrammarRule|UnitEnum|string ...$sequence): PendingSequence
     {
-        if (count($sequence) === 0) {
-            throw new InvalidArgumentException("The sequence must have at least one element.");
-        }
         $sequence = array_map(
             fn($item) => match (true) {
                 $item instanceof Closure => fn(): GrammarRule|UnitEnum|string => $item(),

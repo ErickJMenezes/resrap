@@ -28,7 +28,7 @@ final class ScannerBuilder
     public function aliases(array $aliases): self
     {
         foreach ($aliases as $alias => $pattern) {
-            $this->aliases['{'.$alias.'}'] = ["(?&$alias)", "(?<$alias> $pattern)"];
+            $this->aliases['{'.$alias.'}'] = $pattern;
         }
         return $this;
     }
@@ -40,19 +40,15 @@ final class ScannerBuilder
 
     private function preparePatterns(): array
     {
+        $aliases = array_keys($this->aliases);
+        $replacements = array_values($this->aliases);
         $patterns = [];
         foreach ($this->matchers as $matcher) {
-            $currentPattern = "^$matcher->pattern";
-            $currentPatternSubroutines = [];
-            foreach ($this->aliases as $alias => [$replacement, $subroutineDefinition]) {
-                if (str_contains($matcher->pattern, $alias)) {
-                    $currentPattern = str_replace($alias, $replacement, $currentPattern);
-                    $currentPatternSubroutines[] = $subroutineDefinition;
-                }
-            }
-            if (count($currentPatternSubroutines) > 0) {
-                $currentPattern = "(?(DEFINE)\n".implode("\n", $currentPatternSubroutines).") $currentPattern";
-            }
+            $currentPattern = str_replace(
+                $aliases,
+                $replacements,
+                "^$matcher->pattern",
+            );
             $patterns["/$currentPattern/xs"] = $matcher->handler;
         }
         return $patterns;
