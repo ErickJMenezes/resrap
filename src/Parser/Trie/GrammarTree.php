@@ -25,4 +25,6 @@ final class GrammarTree
     public ?Closure $callback = null;
 
     public GrammarRule|UnitEnum|string $matcher;
+
+    public bool $isEmptySequence = false;
 }

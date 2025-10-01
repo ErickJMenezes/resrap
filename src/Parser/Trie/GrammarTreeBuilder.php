@@ -24,10 +24,13 @@ final class GrammarTreeBuilder
 
     private function buildSubtree(GrammarRule $grammar): GrammarTree
     {
-        return $this->cache[$grammar->name] = $this->createGrammarTree(
-            $grammar->combinations,
-            $grammar->callbacks,
-        );
+        if (isset($this->cache[$grammar->name])) {
+            return $this->cache[$grammar->name];
+        }
+        $root = $this->cache[$grammar->name] = new GrammarTree();
+        $root->matcher = $grammar;
+        $this->createGrammarTree($grammar, $root);
+        return $root;
     }
 
     private function normalizeMatcher(GrammarRule|UnitEnum|string $matcher): string
@@ -35,15 +38,9 @@ final class GrammarTreeBuilder
         return (string) new MatcherDescriber($matcher);
     }
 
-    /**
-     * @param array<array-key, array<int, (Closure(): (GrammarRule|UnitEnum|string))|GrammarRule|UnitEnum|string>> $combinations
-     * @param array<array-key, Closure(array<array-key, string>): mixed>                                           $callbacks
-     */
-    private function createGrammarTree(array $combinations, array $callbacks): GrammarTree
+    private function createGrammarTree(GrammarRule $grammar, GrammarTree $root): void
     {
-        $root = new GrammarTree();
-
-        foreach ($combinations as $seqKey => $sequence) {
+        foreach ($grammar->combinations as $seqKey => $sequence) {
             $node = $root;
             foreach ($sequence as $matcher) {
                 if ($matcher instanceof Closure) {
@@ -58,9 +55,8 @@ final class GrammarTreeBuilder
             }
             $node->isTerminal = true;
             $node->sequenceKey = $seqKey;
-            $node->callback = $callbacks[$seqKey];
+            $node->callback = $grammar->callbacks[$seqKey];
+            $node->isEmptySequence = count($sequence) === 0;
         }
-
-        return $root;
     }
 }

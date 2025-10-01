@@ -6,6 +6,7 @@ namespace Resrap\Component\Parser;
 
 use Resrap\Component\Parser\Trie\GrammarTree;
 use Resrap\Component\Parser\Trie\GrammarTreeBuilder;
+use Resrap\Component\Parser\Trie\TreeKind;
 use Resrap\Component\Scanner\ScannerInterface;
 use Resrap\Component\Scanner\ScannerIterator;
 use Resrap\Component\Scanner\ScannerIteratorInterface;
@@ -114,7 +115,7 @@ final class Parser
                 return ParseResult::success(($child->callback)($parsed));
             }
         }
-        if ($trie->isTerminal) {
+        if ($trie->isTerminal && $trie->isEmptySequence) {
             return ParseResult::success(($trie->callback)($parsed));
         }
         return ParseResult::failure($furthestError ?? new ParseError(
