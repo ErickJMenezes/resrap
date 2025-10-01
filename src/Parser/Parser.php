@@ -72,9 +72,13 @@ final class Parser
         foreach ($trie->children as $child) {
             $token = $this->iterator->current();
             $matcher = $child->matcher;
-
-            if ($matcher instanceof GrammarRule) {
-                $macherResult = $this->buildTreeAndApply($matcher);
+            $tokenInLookahead = $child->kind === TreeKind::BRANCH &&
+                in_array($token, $child->branch->lookahead, true);
+            if ($child->kind === TreeKind::BRANCH) {
+                if (!$tokenInLookahead) {
+                    continue;
+                }
+                $macherResult = $this->apply($child->branch);
                 if (!$macherResult->ok) {
                     $furthestError = ParseError::furthestBetween($furthestError, $macherResult->error);
                     $this->iterator->goto($startPosition);
@@ -105,6 +109,9 @@ final class Parser
                 $this->iterator->next();
             }
             if (count($child->children) > 0) {
+                if ($child->kind === TreeKind::BRANCH && !$tokenInLookahead && $child->isTerminal) {
+                    return ParseResult::success(($child->callback)($parsed));
+                }
                 $childResult = $this->iterateChildren($child, $parsed);
                 if ($childResult->ok) {
                     return $childResult;
@@ -115,7 +122,7 @@ final class Parser
                 return ParseResult::success(($child->callback)($parsed));
             }
         }
-        if ($trie->isTerminal && $trie->isEmptySequence) {
+        if ($trie->isTerminal || $trie->isEmptySequence) {
             return ParseResult::success(($trie->callback)($parsed));
         }
         return ParseResult::failure($furthestError ?? new ParseError(

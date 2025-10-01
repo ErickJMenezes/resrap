@@ -6,6 +6,7 @@ namespace Resrap\Component\Parser\Trie;
 
 enum TreeKind
 {
-    case LEAF;
+    case ROOT;
     case BRANCH;
+    case LEAF;
 }

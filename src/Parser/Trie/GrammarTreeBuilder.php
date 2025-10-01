@@ -17,6 +17,11 @@ final class GrammarTreeBuilder
     /** @var array<GrammarTree> */
     private array $cache = [];
 
+    public function treeFor()
+    {
+
+    }
+
     public function build(GrammarRule $grammar): GrammarTree
     {
         return $this->buildSubtree($grammar);
@@ -27,10 +32,11 @@ final class GrammarTreeBuilder
         if (isset($this->cache[$grammar->name])) {
             return $this->cache[$grammar->name];
         }
-        $root = $this->cache[$grammar->name] = new GrammarTree();
-        $root->matcher = $grammar;
-        $this->createGrammarTree($grammar, $root);
-        return $root;
+        $branch = new GrammarTree();
+        $branch->kind = TreeKind::ROOT;
+        $this->cache[$grammar->name] = $branch;
+        $this->createGrammarTree($grammar, $branch);
+        return $branch;
     }
 
     private function normalizeMatcher(GrammarRule|UnitEnum|string $matcher): string
@@ -38,20 +44,33 @@ final class GrammarTreeBuilder
         return (string) new MatcherDescriber($matcher);
     }
 
-    private function createGrammarTree(GrammarRule $grammar, GrammarTree $root): void
+    private function createGrammarTree(GrammarRule $grammar, GrammarTree $branch): void
     {
         foreach ($grammar->combinations as $seqKey => $sequence) {
-            $node = $root;
-            foreach ($sequence as $matcher) {
+            $node = $branch;
+            foreach ($sequence as $mPos => $matcher) {
                 if ($matcher instanceof Closure) {
                     $matcher = $matcher();
                 }
                 $key = $this->normalizeMatcher($matcher);
-                if (!isset($node->children[$key])) {
-                    $node->children[$key] = new GrammarTree();
-                    $node->children[$key]->matcher = $matcher;
+                $child = $node->children[$key] ??= new GrammarTree();
+                if ($matcher instanceof GrammarRule) {
+                    $child->kind = TreeKind::BRANCH;
+                    $subtree = $this->buildSubtree($matcher);
+                    $child->branch = $subtree;
+                    $branch->lookahead = array_unique([
+                        ...$branch->lookahead,
+                        ...$subtree->lookahead,
+                    ], SORT_REGULAR);
+                } else {
+                    $child->matcher = $matcher;
+                    $child->kind = TreeKind::LEAF;
+                    $branch->lookahead = array_unique([
+                        ...$branch->lookahead,
+                        $matcher,
+                    ], SORT_REGULAR);
                 }
-                $node = $node->children[$key];
+                $node = $child;
             }
             $node->isTerminal = true;
             $node->sequenceKey = $seqKey;

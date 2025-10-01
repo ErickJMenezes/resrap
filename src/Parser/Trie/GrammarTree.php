@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace Resrap\Component\Parser\Trie;
 
 use Closure;
-use Resrap\Component\Parser\GrammarRule;
 use UnitEnum;
 
 final class GrammarTree
@@ -24,7 +23,16 @@ final class GrammarTree
      */
     public ?Closure $callback = null;
 
-    public GrammarRule|UnitEnum|string $matcher;
+    public null|UnitEnum|string $matcher = null;
 
     public bool $isEmptySequence = false;
+
+    public TreeKind $kind = TreeKind::LEAF;
+
+    public ?self $branch = null;
+
+    /**
+     * @var array<UnitEnum|string>
+     */
+    public array $lookahead = [];
 }
