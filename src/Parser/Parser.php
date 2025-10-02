@@ -50,21 +50,12 @@ final class Parser
 
     private function buildTreeAndApply(GrammarRule $grammar): ParseResult
     {
-        return $this->apply($this->grammarTreeBuilder->build($grammar));
+        $grammarTree = $this->grammarTreeBuilder->build($grammar);
+
+        return $this->apply($grammarTree);
     }
 
-    private function apply(GrammarTree $trie): ParseResult
-    {
-        return $this->iterateChildren($trie);
-    }
-
-    /**
-     * @param GrammarTree $trie
-     * @param array       $carry
-     *
-     * @return ParseResult
-     */
-    private function iterateChildren(GrammarTree $trie, array $carry = []): ParseResult
+    private function apply(GrammarTree $trie, array $carry = []): ParseResult
     {
         $furthestError = null;
         $startPosition = $this->iterator->key();
@@ -112,7 +103,7 @@ final class Parser
                 if ($child->kind === TreeKind::BRANCH && !$tokenInLookahead && $child->isTerminal) {
                     return ParseResult::success(($child->callback)($parsed));
                 }
-                $childResult = $this->iterateChildren($child, $parsed);
+                $childResult = $this->apply($child, $parsed);
                 if ($childResult->ok) {
                     return $childResult;
                 }
