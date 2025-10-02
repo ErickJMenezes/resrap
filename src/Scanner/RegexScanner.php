@@ -20,6 +20,10 @@ final class RegexScanner implements ScannerInterface
 
     private string $input;
 
+    private bool $eof {
+        get => strlen($this->input) === 0;
+    }
+
     /**
      * @param array<string, Closure(string&,array): (int|UnitEnum)> $patterns
      */
@@ -30,7 +34,7 @@ final class RegexScanner implements ScannerInterface
 
     public function lex(): UnitEnum
     {
-        if (strlen($this->input) === 0) {
+        if ($this->eof) {
             return ScannerToken::EOF;
         }
         do {
@@ -44,10 +48,13 @@ final class RegexScanner implements ScannerInterface
 
     private function tokenize(): int|UnitEnum
     {
+        if ($this->eof) {
+            return ScannerToken::EOF;
+        }
         foreach ($this->patterns as $regexp => $handler) {
             $matches = [];
             preg_match($regexp, $this->input, $matches);
-            if (empty($matches[0])) {
+            if (count($matches) === 0) {
                 continue;
             }
             $value = array_shift($matches);
