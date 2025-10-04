@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Resrap\Component\Parser;
 
 use Resrap\Component\Scanner\ScannerInterface;
+use RuntimeException;
 
 /**
  * LALR Parser
@@ -81,8 +82,13 @@ final class Parser
                     $ruleLength = $this->getRuleLength($ruleIndex);
 
                     // remove symbols from stack
-                    $args = array_splice($valueStack, -$ruleLength);
-                    array_splice($stateStack, -$ruleLength);
+                    if ($ruleLength > 0) {
+                        $args = array_splice($valueStack, -$ruleLength);
+                        array_splice($stateStack, -$ruleLength);
+                    } else {
+                        $args = [];
+                        // Does not remove when the rule is empty
+                    }
 
                     // execute callback
                     $callbackResult = $callback($args);
@@ -91,7 +97,19 @@ final class Parser
                     // check goto
                     $currentState = end($stateStack);
                     $ruleNonTerminal = $this->getRuleNonTerminal($ruleIndex);
-                    $nextState = $this->goto[$currentState][$ruleNonTerminal];
+                    $nextState = $this->goto[$currentState][$ruleNonTerminal] ?? null;
+
+                    if ($nextState === null) {
+                        // Special case: If no GOTO and we are reducing the initial rule,
+                        // it means we finished parsing successfully
+                        if (count($stateStack) === 1 && $currentState === 0) {
+                            // Estamos no estado inicial, parsing completo
+                            return $callbackResult;
+                        }
+
+                        throw new RuntimeException("GOTO[$currentState][$ruleNonTerminal] not found.");
+                    }
+
                     $stateStack[] = $nextState;
                     break;
                 case Table::ACCEPT:

@@ -38,9 +38,14 @@ final class Table
 
     private(set) array $rules;
 
+    private array $terminals = [];
+
+    private array $nonTerminals = [];
+
     public function __construct(GrammarRule $root)
     {
         $this->rules = $rules = $this->buildRules($root);
+        $this->identifySymbols($rules);
         $items = $this->buildItems($rules);
         [$this->states, $this->transitions] = $this->generateStates($items, $rules);
 
@@ -81,6 +86,20 @@ final class Table
         return $result;
     }
 
+    private function identifySymbols(array $rules): void
+{
+    foreach ($rules as [$lhs, $rhs]) {
+        $this->nonTerminals[$lhs] = true;
+    }
+    foreach ($rules as [$lhs, $rhs]) {
+        foreach ($rhs as $symbol) {
+            if (!isset($this->nonTerminals[$symbol])) {
+                $this->terminals[$symbol] = true;
+            }
+        }
+    }
+}
+
     private function translate(string|UnitEnum|GrammarRule $rule): int|string
     {
         return match (true) {
@@ -94,8 +113,14 @@ final class Table
     {
         $items = [];
         foreach ($rules as $ruleIndex => [$lhs, $rhs]) {
-            for ($i = 0; $i < count($rhs); $i++) {
-                $items[] = [$ruleIndex, $lhs, $rhs, $i];
+            // Se RHS está vazio, cria item com ponto no final
+            if (count($rhs) === 0) {
+                $items[] = [$ruleIndex, $lhs, $rhs, 0];
+            } else {
+                // Cria items com ponto em cada posição
+                for ($i = 0; $i < count($rhs); $i++) {
+                    $items[] = [$ruleIndex, $lhs, $rhs, $i];
+                }
             }
         }
         return $items;
@@ -107,7 +132,18 @@ final class Table
         $transitions = [];
         $stateQueue = [];
 
-        $state0 = $this->closure([$items[0]], $rules);
+        // Estado inicial deve incluir TODOS os items da regra inicial (todas as alternativas)
+        $initialItems = [];
+        $initialSymbol = $rules[0][0]; // Nome da regra inicial
+        foreach ($items as $item) {
+            [$ruleIndex, $lhs, $rhs, $dot] = $item;
+            // Inclui todos os items que começam com a regra inicial e têm ponto no início
+            if ($lhs === $initialSymbol && $dot === 0) {
+                $initialItems[] = $item;
+            }
+        }
+        
+        $state0 = $this->closure($initialItems, $rules);
         $states[] = $state0;
         $stateQueue[] = 0;
 
@@ -196,8 +232,7 @@ final class Table
 
     private function isTerminal(string|int $symbol): bool
     {
-        // Terminais são strings em MAIÚSCULAS
-        return is_string($symbol) && strtoupper($symbol) === $symbol;
+        return isset($this->terminals[$symbol]);
     }
 
     private function canBeEmpty(string|int $symbol, array $rules): bool
@@ -282,22 +317,35 @@ final class Table
 
                     $sizeBefore = count($follow[$symbol]);
 
-                    // if next symbol, add FIRST to them
-                    if ($i + 1 < count($rhs)) {
-                        $nextSymbol = $rhs[$i + 1];
+                    // Add FIRST of all following symbols until we find one that can't be empty
+                    $allFollowingCanBeEmpty = true;
+                    for ($j = $i + 1; $j < count($rhs); $j++) {
+                        $nextSymbol = $rhs[$j];
+                        
                         if ($this->isTerminal($nextSymbol)) {
                             $follow[$symbol][] = $nextSymbol;
+                            $allFollowingCanBeEmpty = false;
+                            break; // Terminal can't be empty, stop here
                         } else {
+                            // Add FIRST of this non-terminal
                             $follow[$symbol] = array_merge(
                                 $follow[$symbol],
                                 $this->first[$nextSymbol] ?? [],
                             );
+                            
+                            // If this symbol can't be empty, stop
+                            if (!$this->canBeEmpty($nextSymbol, $rules)) {
+                                $allFollowingCanBeEmpty = false;
+                                break;
+                            }
+                            // Otherwise, continue to next symbol
                         }
-                        $follow[$symbol] = array_unique($follow[$symbol]);
                     }
+                    
+                    $follow[$symbol] = array_unique($follow[$symbol]);
 
-                    // If is last symbol and the next can be empty
-                    if ($i + 1 >= count($rhs)) {
+                    // If all following symbols can be empty (or no following symbols), add FOLLOW(LHS)
+                    if ($allFollowingCanBeEmpty) {
                         $follow[$symbol] = array_unique(
                             array_merge(
                                 $follow[$symbol],

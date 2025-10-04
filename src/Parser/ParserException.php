@@ -16,23 +16,6 @@ use UnitEnum;
  */
 class ParserException extends RuntimeException
 {
-    public static function expectedEof(UnitEnum $token, int $position): self
-    {
-        return new self("Unexpected token: {$token->name} at position {$position}. Expected EOF.");
-    }
-
-    public static function syntaxError(array $expected, string $actual, int $position): self
-    {
-        $exp = implode(", ", $expected);
-        $msg = "Parse error at position {$position}: expected {$exp}, found '{$actual}'";
-        return new self($msg);
-    }
-
-    public static function unexpectedToken(UnitEnum $token): self
-    {
-        return new self("Unexpected token: {$token->name}.");
-    }
-
     public static function invalidSyntax(
         string $input,
         Position $position,
