@@ -2,7 +2,7 @@
 
 *WARNING: This package is not intended for serious usage.*
 
-It's not a framework, but it's a good starting point for building your own parser combinator and a regexp-based scanner.
+It's not a framework, but it's a good starting point for building your own parser and a regexp-based scanner.
 
 ## Requirements
 - PHP ^8.4
@@ -92,7 +92,7 @@ use Resrap\Component\Parser\Parser;
 
 $scanner = create_scanner();
 $grammar = create_grammar();
-$parser = new Parser($scanner, $grammar);
+$parser = Parser::fromGrammar($grammar, $scanner);
 echo $parser->parse('1 + 2 + 3'); // 6
 ```
 

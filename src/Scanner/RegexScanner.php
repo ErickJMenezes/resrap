@@ -18,50 +18,48 @@ final class RegexScanner implements ScannerInterface
 {
     private ?string $value = null;
 
-    private string $input;
+    private InputBuffer $buffer;
 
-    private bool $eof {
-        get => strlen($this->input) === 0;
-    }
+    private ?Position $lastTokenPosition = null;
 
     /**
      * @param array<string, Closure(string&,array): (int|UnitEnum)> $patterns
      */
     public function __construct(private readonly array $patterns)
     {
-        $this->input = '';
     }
 
     public function lex(): UnitEnum
     {
-        if ($this->eof) {
+        if ($this->buffer->eof) {
             return ScannerToken::EOF;
         }
         do {
             $token = $this->tokenize();
         } while ($token === ScannerToken::SKIP);
         if ($token === ScannerToken::ERROR) {
-            throw ScannerException::unexpectedCharacter(substr($this->input, 0, 1));
+            throw ScannerException::unexpectedCharacter(substr($this->buffer->content, 0, 1));
         }
         return $token;
     }
 
     private function tokenize(): int|UnitEnum
     {
-        if ($this->eof) {
+        if ($this->buffer->eof) {
             return ScannerToken::EOF;
         }
         foreach ($this->patterns as $regexp => $handler) {
             $matches = [];
-            preg_match($regexp, $this->input, $matches);
+            preg_match($regexp, $this->buffer->content, $matches);
             if (count($matches) === 0) {
                 continue;
             }
+            $this->lastTokenPosition = $this->buffer->position;
             $value = array_shift($matches);
             $size = strlen($value);
             $handlerResult = ($handler)($value, $matches);
+            $this->buffer->consume($size);
             $this->value = $value;
-            $this->input = substr($this->input, $size);
             return $handlerResult;
         }
         return ScannerToken::ERROR;
@@ -74,7 +72,16 @@ final class RegexScanner implements ScannerInterface
 
     public function setInput(string $input): void
     {
-        $this->input = $input;
-        $this->value = null;
+        $this->buffer = new InputBuffer($input);
+    }
+
+    public function position(): Position
+    {
+        return $this->buffer->position;
+    }
+
+    public function lastTokenPosition(): Position
+    {
+        return $this->lastTokenPosition ?? $this->position();
     }
 }

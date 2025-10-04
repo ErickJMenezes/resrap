@@ -1,125 +1,113 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Resrap\Component\Parser;
 
-use Resrap\Component\Parser\Trie\GrammarTree;
-use Resrap\Component\Parser\Trie\GrammarTreeBuilder;
-use Resrap\Component\Parser\Trie\TreeKind;
 use Resrap\Component\Scanner\ScannerInterface;
-use Resrap\Component\Scanner\ScannerIterator;
-use Resrap\Component\Scanner\ScannerIteratorInterface;
-use Resrap\Component\Scanner\ScannerToken;
-use UnitEnum;
 
 /**
- * The Parser class is responsible for parsing input data based on a given grammar.
- * It uses a scanner to iterate through input tokens and a grammar tree builder
- * to match and process the grammar rules.
- * The class handles the parsing process
- * recursively, applying rules and generating structured output or errors as needed.
+ * LALR Parser
  */
 final class Parser
 {
-    private ScannerIteratorInterface $iterator;
-
-    private GrammarTreeBuilder $grammarTreeBuilder;
-
     public function __construct(
-        private ScannerInterface $scanner,
-        private GrammarRule $grammar,
-    ) {
-        $this->grammarTreeBuilder = new GrammarTreeBuilder();
+        private array $actions,
+        private array $goto,
+        private array $callbacks,
+        private array $rules,
+        private readonly ScannerInterface $scanner,
+    ) {}
+
+    public static function fromGrammar(GrammarRule $root, ScannerInterface $scanner)
+    {
+        $table = new Table($root);
+        return new self(
+            $table->actionTable,
+            $table->gotoTable,
+            $table->callbackTable,
+            $table->rules,
+            $scanner
+        );
     }
 
     public function parse(string $input): mixed
     {
         $this->scanner->setInput($input);
-        $this->iterator = new ScannerIterator($this->scanner);
-        $result = $this->buildTreeAndApply($this->grammar);
-        if (!$result->ok) {
-            throw $result->error->toException();
+        $stateStack = [0];
+        $valueStack = [];
+        $token = null;
+        $tokenName = null;
+
+        while(true) {
+            $currentState = end($stateStack);
+
+            // Only takes a new item if the current is empty
+            if ($token === null) {
+                $token = $this->scanner->lex();
+                $tokenName = $token->name;
+
+                // Map EOF to $ (end symbol in tables)
+                if ($tokenName === 'EOF') {
+                    $tokenName = '$';
+                }
+            }
+
+            $action = $this->actions[$currentState][$tokenName] ?? null;
+            if ($action === null) {
+                // Coleta tokens esperados neste estado
+                $expectedTokens = array_keys($this->actions[$currentState] ?? []);
+
+                throw ParserException::invalidSyntax(
+                    $input,
+                    $this->scanner->lastTokenPosition(),
+                    $token->name,
+                    $this->scanner->value() ?? $tokenName,
+                    $expectedTokens,
+                );
+            }
+
+            [$actionType, $actionValue] = $action;
+
+            switch ($actionType) {
+                case Table::SHIFT:
+                    $valueStack[] = $this->scanner->value();
+                    $stateStack[] = $actionValue;
+                    $token = null; // Consume token
+                    break;
+                case Table::REDUCE:
+                    $ruleIndex = $actionValue;
+                    $callback = $this->callbacks[$ruleIndex];
+                    $ruleLength = $this->getRuleLength($ruleIndex);
+
+                    // remove symbols from stack
+                    $args = array_splice($valueStack, -$ruleLength);
+                    array_splice($stateStack, -$ruleLength);
+
+                    // execute callback
+                    $callbackResult = $callback($args);
+                    $valueStack[] = $callbackResult;
+
+                    // check goto
+                    $currentState = end($stateStack);
+                    $ruleNonTerminal = $this->getRuleNonTerminal($ruleIndex);
+                    $nextState = $this->goto[$currentState][$ruleNonTerminal];
+                    $stateStack[] = $nextState;
+                    break;
+                case Table::ACCEPT:
+                    $callback = $this->callbacks[0];
+                    return $callback($valueStack);
+            }
         }
-        $current = $this->iterator->current();
-        if ($current !== ScannerToken::EOF) {
-            throw ParserException::expectedEof($current, $this->iterator->key());
-        }
-        return $result->value;
     }
 
-    private function buildTreeAndApply(GrammarRule $grammar): ParseResult
+    private function getRuleLength(int $ruleIndex): int
     {
-        $grammarTree = $this->grammarTreeBuilder->build($grammar);
-
-        return $this->apply($grammarTree);
+        return count($this->rules[$ruleIndex][1]);
     }
 
-    private function apply(GrammarTree $trie, array $carry = []): ParseResult
+    private function getRuleNonTerminal(int $ruleIndex): string
     {
-        $furthestError = null;
-        $startPosition = $this->iterator->key();
-        $parsed = $carry;
-        foreach ($trie->children as $child) {
-            $token = $this->iterator->current();
-            $matcher = $child->matcher;
-            $tokenInLookahead = $child->kind === TreeKind::BRANCH &&
-                in_array($token, $child->branch->lookahead, true);
-            if ($child->kind === TreeKind::BRANCH) {
-                if (!$tokenInLookahead) {
-                    continue;
-                }
-                $macherResult = $this->apply($child->branch);
-                if (!$macherResult->ok) {
-                    $furthestError = ParseError::furthestBetween($furthestError, $macherResult->error);
-                    $this->iterator->goto($startPosition);
-                    continue;
-                }
-                $parsed[] = $macherResult->value;
-            } elseif ($matcher instanceof UnitEnum) {
-                if ($token !== $matcher) {
-                    $furthestError = ParseError::furthestBetween($furthestError, new ParseError(
-                        $this->iterator->key(),
-                        $token instanceof UnitEnum ? $token->name : $this->iterator->value(),
-                        [$matcher->name]
-                    ));
-                    continue;
-                }
-                $parsed[] = $this->iterator->value();
-                $this->iterator->next();
-            } elseif (is_string($matcher)) {
-                if ($matcher !== $this->iterator->value()) {
-                    $furthestError = ParseError::furthestBetween($furthestError, new ParseError(
-                        $this->iterator->key(),
-                        $this->iterator->value(),
-                        [$matcher]
-                    ));
-                    continue;
-                }
-                $parsed[] = $this->iterator->value();
-                $this->iterator->next();
-            }
-            if (count($child->children) > 0) {
-                if ($child->kind === TreeKind::BRANCH && !$tokenInLookahead && $child->isTerminal) {
-                    return ParseResult::success(($child->callback)($parsed));
-                }
-                $childResult = $this->apply($child, $parsed);
-                if ($childResult->ok) {
-                    return $childResult;
-                }
-                $furthestError = ParseError::furthestBetween($furthestError, $childResult->error);
-            }
-            if ($child->isTerminal) {
-                return ParseResult::success(($child->callback)($parsed));
-            }
-        }
-        if ($trie->isTerminal || $trie->isEmptySequence) {
-            return ParseResult::success(($trie->callback)($parsed));
-        }
-        return ParseResult::failure($furthestError ?? new ParseError(
-            $this->iterator->key(),
-            $this->iterator->value(),
-            ['<unknown>'],
-        ));
+        return $this->rules[$ruleIndex][0];
     }
 }

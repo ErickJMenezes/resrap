@@ -13,7 +13,7 @@ use UnitEnum;
 final class GrammarRule
 {
     /**
-     * @var array<array-key, array<int, (Closure(): (GrammarRule|UnitEnum|string))|GrammarRule|UnitEnum|string>>
+     * @var array<array-key, array<int, (Closure(): GrammarRule)|GrammarRule|UnitEnum|string>>
      */
     private(set) array $combinations = [];
 
@@ -30,7 +30,7 @@ final class GrammarRule
     /**
      * Combines a sequence of elements into a pending sequence.
      *
-     * @param (Closure(): (GrammarRule|UnitEnum|string))|GrammarRule|UnitEnum|string ...$sequence The sequence of
+     * @param (Closure(): GrammarRule)|GrammarRule|UnitEnum|string ...$sequence The sequence of
      *                                                                               elements to combine.
      *
      * @return PendingSequence A new PendingSequence instance created with the provided sequence.
@@ -39,7 +39,7 @@ final class GrammarRule
     {
         $sequence = array_map(
             fn($item) => match (true) {
-                $item instanceof Closure => fn(): GrammarRule|UnitEnum|string => $item(),
+                $item instanceof Closure => fn(): GrammarRule => $item(),
                 default => $item,
             },
             $sequence,
