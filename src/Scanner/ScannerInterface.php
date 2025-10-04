@@ -38,4 +38,18 @@ interface ScannerInterface
      * @return void
      */
     public function setInput(string $input): void;
+
+    /**
+     * Returns the current position of the scanner.
+     *
+     * @return Position
+     */
+    public function position(): Position;
+
+    /**
+     * Returns the last position of the scanner.
+     *
+     * @return Position
+     */
+    public function lastTokenPosition(): Position;
 }

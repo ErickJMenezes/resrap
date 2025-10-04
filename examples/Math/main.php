@@ -1,7 +1,7 @@
 <?php
 
-use Resrap\Component\Parser\Parser;
 use Resrap\Component\Parser\GrammarRule;
+use Resrap\Component\Parser\Parser;
 use Resrap\Component\Scanner\Pattern;
 use Resrap\Component\Scanner\ScannerBuilder;
 use Resrap\Component\Scanner\ScannerInterface;
@@ -70,6 +70,6 @@ function grammar(): GrammarRule
         ->then(fn(array $m) => eval("return {$m[0]};"));
 }
 
-$parser = new Parser(scanner(), grammar());
+$parser = Parser::fromGrammar(grammar(), scanner());
 
 var_dump($parser->parse('3 + 3 * 2 / 2'));
