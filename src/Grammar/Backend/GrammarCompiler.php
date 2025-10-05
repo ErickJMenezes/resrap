@@ -41,6 +41,10 @@ final class GrammarCompiler implements CompilerBackendInterface
         }
 
         foreach ($ast->uses as $use) {
+            if ($use->alias !== null) {
+                $this->uses[$use->alias] = $use->name;
+                continue;
+            }
             $parts = explode('\\', $use->name);
             $this->uses[$parts[count($parts) - 1]] = $use->name;
         }
@@ -109,6 +113,6 @@ final class GrammarCompiler implements CompilerBackendInterface
 
     public function getUses(): array
     {
-        return array_values($this->uses);
+        return $this->uses;
     }
 }

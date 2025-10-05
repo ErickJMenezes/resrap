@@ -15,9 +15,10 @@ enum Token
     case COMMENT;               // (skip)
     case CODE_BLOCK;            // { ... }
     // Special instructions
-    case DEFINE_CLASSNAME;      // %class FooBar
+    case DEFINE_CLASSNAME;      // %class FooBar;
     case BACKSLASH;             // \
-    case USE;                   // %use FooBar
-    case START;                 // %start foo
+    case USE;                   // %use FooBar;
+    case AS;                   // %use FooBar as F;
+    case START;                 // %start foo;
     case STATIC_ACCESS;         // ::
 }

@@ -18,9 +18,10 @@ test('must compile grammar', function () {
     $file = '
     %class MyGrammar;
     %use Resrap\Tests\Feature\Grammar\Compiler\TestToken;
+    %use Resrap\Tests\Feature\Grammar\Compiler\TestToken as T;
     %start expr;
     
-    expr := TestToken::Add TestToken::Plus TestToken::Bet { return [$1, $2, $3]; }
+    expr := TestToken::Add T::Plus TestToken::Bet { return [$1, $2, $3]; }
           ;
     ';
 

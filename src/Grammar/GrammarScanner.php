@@ -36,6 +36,9 @@ final class GrammarScanner
                 return Token::CHAR;
             }),
 
+            // AS
+            new Pattern('as', Token::AS),
+
             // Identifiers
             new Pattern('{IDENTIFIER}', Token::IDENTIFIER),
 

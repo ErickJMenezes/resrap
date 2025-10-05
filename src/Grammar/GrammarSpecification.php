@@ -57,7 +57,9 @@ final class GrammarSpecification
     {
         return new GrammarRule('use_statement')
             ->is(Token::USE, self::qualifiedIdentifier(...), Token::SEMICOLON)
-            ->then(fn(array $m) => new UseStatement($m[1]));
+            ->then(fn(array $m) => new UseStatement($m[1]))
+            ->is(Token::USE, self::qualifiedIdentifier(...), Token::AS, Token::IDENTIFIER, Token::SEMICOLON)
+            ->then(fn(array $m) => new UseStatement($m[1], $m[3]));
     }
 
     public static function useStatementList(): GrammarRule

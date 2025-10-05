@@ -12,5 +12,6 @@ final readonly class UseStatement implements Node
      */
     public function __construct(
         public string $name,
+        public ?string $alias = null,
     ) {}
 }
