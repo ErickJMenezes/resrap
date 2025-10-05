@@ -2,14 +2,14 @@
 
 use Resrap\Component\Scanner\Pattern;
 use Resrap\Component\Scanner\ScannerBuilder;
-use Resrap\Component\Scanner\ScannerInterface;
+use Resrap\Component\Scanner\Scanner;
 use Resrap\Component\Scanner\ScannerToken;
 use Resrap\Examples\Math\MathParser;
 use Resrap\Examples\Math\MathToken;
 
 require __DIR__.'/../../vendor/autoload.php';
 
-function scanner(): ScannerInterface
+function scanner(): Scanner
 {
     return new ScannerBuilder(
         // skip whitespace

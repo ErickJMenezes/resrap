@@ -5,17 +5,17 @@ namespace Resrap\Tests\Unit;
 use Resrap\Component\Parser\GrammarRule;
 use Resrap\Component\Parser\Parser;
 use Resrap\Component\Scanner\Position;
-use Resrap\Component\Scanner\ScannerInterface;
+use Resrap\Component\Scanner\Scanner;
+use Resrap\Component\Scanner\ScannerToken;
 use UnitEnum;
 
 enum TestToken
 {
     case A;
     case B;
-    case EOF;
 }
 
-class SimpleScanner implements ScannerInterface
+class SimpleScanner implements Scanner
 {
     private array $tokens = [];
     private int $index = 0;
@@ -34,7 +34,7 @@ class SimpleScanner implements ScannerInterface
     public function lex(): UnitEnum
     {
         if ($this->index >= count($this->tokens)) {
-            return TestToken::EOF;
+            return ScannerToken::EOF;
         }
         return $this->tokens[$this->index++];
     }

@@ -58,9 +58,9 @@ enum MathToken
 ### 2. Create a Scanner
 
 ```php
-use Resrap\Component\Scanner\{ScannerInterface, ScannerBuilder, Pattern, ScannerToken};
+use Resrap\Component\Scanner\{Scanner, ScannerBuilder, Pattern, ScannerToken};
 
-function create_scanner(): ScannerInterface
+function create_scanner(): Scanner
 {
     return new ScannerBuilder(
         // skip whitespace

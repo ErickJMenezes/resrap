@@ -11,7 +11,7 @@ use UnitEnum;
  * Provides methods to retrieve the current token, access its value, and move
  * to the next token in the sequence.
  */
-interface ScannerInterface
+interface Scanner
 {
     /**
      * Retrieves parses the next token and return in a representation of an instance of UnitEnum or int.
@@ -40,14 +40,7 @@ interface ScannerInterface
     public function setInput(string $input): void;
 
     /**
-     * Returns the current position of the scanner.
-     *
-     * @return Position
-     */
-    public function position(): Position;
-
-    /**
-     * Returns the last position of the scanner.
+     * Returns the position of the previous token returned by the scanner.
      *
      * @return Position
      */

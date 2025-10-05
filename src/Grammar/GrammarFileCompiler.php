@@ -39,7 +39,7 @@ final class GrammarFileCompiler
         // $code = "<?php\n\n";
         // $code .= "namespace Generated;\n\n";
         $code = "use Resrap\\Component\\Parser\\Parser;\n";
-        $code .= "use Resrap\\Component\\Scanner\\ScannerInterface;\n";
+        $code .= "use Resrap\\Component\\Scanner\\Scanner;\n";
         foreach ($uses as $use) {
             $code .= "use $use;\n";
         }
@@ -59,7 +59,7 @@ final class GrammarFileCompiler
 
         $code .= "    private Parser \$parser;\n";
 
-        $code .= "    public function __construct(ScannerInterface \$scanner)\n";
+        $code .= "    public function __construct(Scanner \$scanner)\n";
         $code .= "    {\n";
         $code .= "        \$callbacks = [];\n";
         foreach ($table->callbackTable as $index => $callback) {

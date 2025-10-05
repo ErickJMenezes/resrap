@@ -6,12 +6,12 @@ namespace Resrap\Component\Grammar;
 
 use Resrap\Component\Scanner\Pattern;
 use Resrap\Component\Scanner\ScannerBuilder;
-use Resrap\Component\Scanner\ScannerInterface;
+use Resrap\Component\Scanner\Scanner;
 use Resrap\Component\Scanner\ScannerToken;
 
 final class GrammarScanner
 {
-    public static function create(): ScannerInterface
+    public static function create(): Scanner
     {
         return new ScannerBuilder(
         // Assignment

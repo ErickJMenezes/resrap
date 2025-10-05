@@ -3,7 +3,7 @@
 namespace Resrap\Examples\Json;
 
 use Resrap\Component\Parser\Parser;
-use Resrap\Component\Scanner\ScannerInterface;
+use Resrap\Component\Scanner\Scanner;
 use Resrap\Examples\Json\Ast\JsonArray;
 use Resrap\Examples\Json\Ast\JsonBoolean;
 use Resrap\Examples\Json\Ast\JsonNull;
@@ -767,7 +767,7 @@ final class JsonParser
   ),
 );
     private Parser $parser;
-    public function __construct(ScannerInterface $scanner)
+    public function __construct(Scanner $scanner)
     {
         $callbacks = [];
         $callbacks[0] = function (array $m) { return $m[0]; };

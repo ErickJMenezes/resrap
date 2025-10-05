@@ -14,7 +14,7 @@ use UnitEnum;
  * of regular expression patterns provided during instantiation. It extracts
  * tokens based on these patterns and executes corresponding handler functions.
  */
-final class RegexScanner implements ScannerInterface
+final class RegexScanner implements Scanner
 {
     private ?string $value = null;
 
@@ -57,8 +57,8 @@ final class RegexScanner implements ScannerInterface
             $this->lastTokenPosition = $this->buffer->position;
             $value = array_shift($matches);
             $size = strlen($value);
-            $handlerResult = ($handler)($value, $matches);
             $this->buffer->consume($size);
+            $handlerResult = $handler($value, $matches);
             $this->value = $value;
             return $handlerResult;
         }
@@ -75,13 +75,8 @@ final class RegexScanner implements ScannerInterface
         $this->buffer = new InputBuffer($input);
     }
 
-    public function position(): Position
-    {
-        return $this->buffer->position;
-    }
-
     public function lastTokenPosition(): Position
     {
-        return $this->lastTokenPosition ?? $this->position();
+        return $this->lastTokenPosition ?? $this->buffer->position;
     }
 }

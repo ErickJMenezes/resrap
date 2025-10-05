@@ -3,7 +3,7 @@
 namespace Resrap\Examples\Math;
 
 use Resrap\Component\Parser\Parser;
-use Resrap\Component\Scanner\ScannerInterface;
+use Resrap\Component\Scanner\Scanner;
 
 final class MathParser
 {
@@ -235,7 +235,7 @@ final class MathParser
   ),
 );
     private Parser $parser;
-    public function __construct(ScannerInterface $scanner)
+    public function __construct(Scanner $scanner)
     {
         $callbacks = [];
         $callbacks[0] = function (array $m) { return eval("return {$m[0]};"); };

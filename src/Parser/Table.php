@@ -54,7 +54,7 @@ final class Table
         $this->follow = $this->computeFollow($rules);
 
         // Build ACTION and GOTO tables
-        $this->buildActionAndGotoTables($rules);
+        $this->buildActionAndGotoTables();
     }
 
     private function buildRules(GrammarRule $root): array
@@ -142,7 +142,7 @@ final class Table
                 $initialItems[] = $item;
             }
         }
-        
+
         $state0 = $this->closure($initialItems, $rules);
         $states[] = $state0;
         $stateQueue[] = 0;
@@ -321,7 +321,7 @@ final class Table
                     $allFollowingCanBeEmpty = true;
                     for ($j = $i + 1; $j < count($rhs); $j++) {
                         $nextSymbol = $rhs[$j];
-                        
+
                         if ($this->isTerminal($nextSymbol)) {
                             $follow[$symbol][] = $nextSymbol;
                             $allFollowingCanBeEmpty = false;
@@ -332,7 +332,7 @@ final class Table
                                 $follow[$symbol],
                                 $this->first[$nextSymbol] ?? [],
                             );
-                            
+
                             // If this symbol can't be empty, stop
                             if (!$this->canBeEmpty($nextSymbol, $rules)) {
                                 $allFollowingCanBeEmpty = false;
@@ -341,7 +341,7 @@ final class Table
                             // Otherwise, continue to next symbol
                         }
                     }
-                    
+
                     $follow[$symbol] = array_unique($follow[$symbol]);
 
                     // If all following symbols can be empty (or no following symbols), add FOLLOW(LHS)
@@ -374,7 +374,7 @@ final class Table
         return null;
     }
 
-    private function buildActionAndGotoTables(array $rules): void
+    private function buildActionAndGotoTables(): void
     {
         foreach ($this->states as $stateIndex => $state) {
             $this->actionTable[$stateIndex] = [];

@@ -4,23 +4,24 @@ declare(strict_types=1);
 
 namespace Resrap\Component\Parser;
 
-use Resrap\Component\Scanner\ScannerInterface;
+use Resrap\Component\Scanner\Scanner;
+use Resrap\Component\Scanner\ScannerToken;
 use RuntimeException;
 
 /**
  * LALR Parser
  */
-final class Parser
+final readonly class Parser
 {
     public function __construct(
         private array $actions,
         private array $goto,
         private array $callbacks,
         private array $rules,
-        private readonly ScannerInterface $scanner,
+        private Scanner $scanner,
     ) {}
 
-    public static function fromGrammar(GrammarRule $root, ScannerInterface $scanner)
+    public static function fromGrammar(GrammarRule $root, Scanner $scanner)
     {
         $table = new Table($root);
         return new self(
@@ -49,7 +50,7 @@ final class Parser
                 $tokenName = $token->name;
 
                 // Map EOF to $ (end symbol in tables)
-                if ($tokenName === 'EOF') {
+                if ($token === ScannerToken::EOF) {
                     $tokenName = '$';
                 }
             }

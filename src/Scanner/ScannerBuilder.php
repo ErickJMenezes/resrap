@@ -33,7 +33,7 @@ final class ScannerBuilder
         return $this;
     }
 
-    public function build(): ScannerInterface
+    public function build(): Scanner
     {
         return new RegexScanner($this->preparePatterns());
     }

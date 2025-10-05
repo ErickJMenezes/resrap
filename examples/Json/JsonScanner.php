@@ -6,12 +6,12 @@ namespace Resrap\Examples\Json;
 
 use Resrap\Component\Scanner\Pattern;
 use Resrap\Component\Scanner\ScannerBuilder;
-use Resrap\Component\Scanner\ScannerInterface;
+use Resrap\Component\Scanner\Scanner;
 use Resrap\Component\Scanner\ScannerToken;
 
 final class JsonScanner
 {
-    public static function build(): ScannerInterface
+    public static function build(): Scanner
     {
         return new ScannerBuilder(
             new Pattern("\{", Token::LBRACE),
