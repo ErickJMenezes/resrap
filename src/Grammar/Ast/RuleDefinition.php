@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Resrap\Component\Ebnf\Ast;
+namespace Resrap\Component\Grammar\Ast;
 
-final readonly class GrammarRuleDefinition implements Node
+final readonly class RuleDefinition implements Node
 {
     /**
      * @param array<RuleToken> $tokens

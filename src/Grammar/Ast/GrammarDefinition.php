@@ -2,13 +2,13 @@
 
 declare(strict_types = 1);
 
-namespace Resrap\Component\Ebnf\Ast;
+namespace Resrap\Component\Grammar\Ast;
 
 final readonly class GrammarDefinition implements Node
 {
     /**
-     * @param string                       $name
-     * @param array<GrammarRuleDefinition> $rules
+     * @param string                $name
+     * @param array<RuleDefinition> $rules
      */
     public function __construct(
         public string $name,

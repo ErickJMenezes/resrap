@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Resrap\Component\Ebnf\Ast;
+namespace Resrap\Component\Grammar\Ast;
 
 final readonly class UseStatement implements Node
 {
@@ -13,9 +13,4 @@ final readonly class UseStatement implements Node
     public function __construct(
         public string $name,
     ) {}
-
-    public function compile(): string
-    {
-        return "use $this->name;";
-    }
 }

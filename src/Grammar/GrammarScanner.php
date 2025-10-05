@@ -2,42 +2,42 @@
 
 declare(strict_types = 1);
 
-namespace Resrap\Component\Ebnf;
+namespace Resrap\Component\Grammar;
 
 use Resrap\Component\Scanner\Pattern;
 use Resrap\Component\Scanner\ScannerBuilder;
 use Resrap\Component\Scanner\ScannerInterface;
 use Resrap\Component\Scanner\ScannerToken;
 
-final class EbnfScanner
+final class GrammarScanner
 {
     public static function create(): ScannerInterface
     {
         return new ScannerBuilder(
         // Assignment
-            new Pattern(':=', EbnfToken::ASSIGN),
+            new Pattern(':=', Token::ASSIGN),
 
             // Operators
-            new Pattern('\|', EbnfToken::PIPE),
+            new Pattern('\|', Token::PIPE),
 
             // Rule terminator
-            new Pattern(';', EbnfToken::SEMICOLON),
+            new Pattern(';', Token::SEMICOLON),
 
             // String literal
             new Pattern('"([^"\\\\]|\\\\.)*"', function (string &$value) {
                 // Strip quotes and unescape
                 $value = stripcslashes(substr($value, 1, -1));
-                return EbnfToken::STRING;
+                return Token::STRING;
             }),
 
             // Char literal
             new Pattern("'([^'\\\\]|\\\\.)*'", function (string &$value) {
                 $value = stripcslashes(substr($value, 1, -1));
-                return EbnfToken::CHAR;
+                return Token::CHAR;
             }),
 
             // Identifiers
-            new Pattern('{IDENTIFIER}', EbnfToken::IDENTIFIER),
+            new Pattern('{IDENTIFIER}', Token::IDENTIFIER),
 
             // Code blocks (semantic actions) → everything inside `{ ... }`
             // NOTE: This should come *after* structural `{` so it's only used
@@ -51,32 +51,31 @@ final class EbnfScanner
                     fn(array $matches) => '$m[' . ((int)$matches[1] - 1) . ']',
                     $value,
                 );
-                return EbnfToken::CODE_BLOCK;
+                return Token::CODE_BLOCK;
             }),
 
+            new Pattern('\\\\', Token::BACKSLASH),
+
             // Classnames
-            new Pattern('(?:%classname|%class)', EbnfToken::CLASSNAME),
+            new Pattern('(?:%classname|%class)', Token::DEFINE_CLASSNAME),
 
             // Use
-            new Pattern('(?:%use|%import)', EbnfToken::USE),
+            new Pattern('(?:%use|%import)', Token::USE),
 
             // Static access
-            new Pattern('\:\:', EbnfToken::STATIC_ACCESS),
-
-            new Pattern('{QUALIFIED_IDENTIFIER}', EbnfToken::QUALIFIED_IDENTIFIER),
+            new Pattern('\:\:', Token::STATIC_ACCESS),
 
             // Single-line comments
             new Pattern('\/\/[^\n]*', ScannerToken::SKIP),
 
             // Multi-line comments
-            new Pattern('/\*.*?\*/', ScannerToken::SKIP),
+            new Pattern('\/\*.*?\*\/', ScannerToken::SKIP),
 
             // Whitespace
             new Pattern('{WS}', ScannerToken::SKIP),
         )
             ->aliases([
                 'IDENTIFIER' => '[a-zA-Z_][a-zA-Z0-9_]*',
-                'QUALIFIED_IDENTIFIER' => '(?:[\\\\]{0,1}[a-zA-Z_][a-zA-Z0-9_]*)+',
                 'WS' => '[\s\t\n\r]+',
             ])
             ->build();

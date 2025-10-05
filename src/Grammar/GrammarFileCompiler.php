@@ -1,0 +1,77 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace Resrap\Component\Grammar;
+
+use Resrap\Component\Grammar\Backend\GrammarCompiler;
+use Resrap\Component\Parser\Table;
+
+final class GrammarFileCompiler
+{
+    private readonly GrammarParser $parser;
+
+    public function __construct()
+    {
+        $this->parser = new GrammarParser();
+    }
+
+    public function compile(string $input): string
+    {
+        $grammarFile = $this->parser->parse($input);
+        $grammarRulesCompiler = new GrammarCompiler();
+        $rootRule = $grammarRulesCompiler->compile($grammarFile);
+        $table = new Table($rootRule);
+
+        return $this->generateParser(
+            $grammarFile->classname,
+            $table,
+            $grammarRulesCompiler->getUses(),
+            $grammarRulesCompiler->getClosures(),
+        );
+    }
+
+    private function generateParser(
+        string $classname,
+        Table $table,
+        array $uses,
+        array $closuresCode,
+    ): string
+    {
+        // $code = "<?php\n\n";
+        // $code .= "namespace Generated;\n\n";
+        $code = "use Resrap\\Component\\Parser\\Parser;\n";
+        $code .= "use Resrap\\Component\\Scanner\\ScannerInterface;\n";
+        foreach ($uses as $use) {
+            $code .= "use $use;\n";
+        }
+        $code .= "\n\n";
+        $code .= "final class $classname\n";
+        $code .= "{\n";
+
+        $code .= "    private const array RULES = ".var_export($table->rules, true).";\n";
+
+        $code .= "    private const array ACTIONS = ".var_export($table->actionTable, true).";\n";
+
+        $code .= "    private const array GOTO = " . var_export($table->gotoTable, true) . ";\n";
+
+        $code .= "    private Parser \$parser;\n";
+
+        $code .= "    public function __construct(ScannerInterface \$scanner)\n";
+        $code .= "    {\n";
+        $code .= "        \$callbacks = [];\n";
+        foreach ($table->callbackTable as $index => $callback) {
+            $code .= "        \$callbacks[$index] = {$closuresCode[$index]};\n";
+        }
+        $code .= "        \$this->parser = new Parser(self::ACTIONS, self::GOTO, \$callbacks, self::RULES, \$scanner);\n";
+        $code .= "    }\n";
+
+        $code .= "    public function parse(string \$input): mixed\n";
+        $code .= "    {\n";
+        $code .= "        return \$this->parser->parse(\$input);\n";
+        $code .= "    }\n";
+        $code .= "}\n";
+
+        return $code;
+    }
+}

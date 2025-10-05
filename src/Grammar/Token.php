@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Resrap\Component\Ebnf;
+namespace Resrap\Component\Grammar;
 
-enum EbnfToken
+enum Token
 {
     case IDENTIFIER;            // expr, number, etc.
     case ASSIGN;                // :=
@@ -15,8 +15,8 @@ enum EbnfToken
     case COMMENT;               // (skip)
     case CODE_BLOCK;            // { ... }
     // Special php instructions
-    case CLASSNAME;             // %class FooBar
-    case QUALIFIED_IDENTIFIER;  // Foo | \Foo | Foo\Bar
+    case DEFINE_CLASSNAME;             // %class FooBar
+    case BACKSLASH; // \
     case USE;                   // %use FooBar
     case STATIC_ACCESS;         // ::
 }

@@ -2,21 +2,21 @@
 
 declare(strict_types = 1);
 
-namespace Resrap\Component\Ebnf;
+namespace Resrap\Component\Grammar;
 
-use Resrap\Component\Ebnf\Ast\GrammarDefinition;
-use Resrap\Component\Ebnf\Ast\GrammarFile;
-use Resrap\Component\Ebnf\Ast\GrammarRuleDefinition;
-use Resrap\Component\Ebnf\Ast\RuleToken;
-use Resrap\Component\Ebnf\Ast\UseStatement;
+use Resrap\Component\Grammar\Ast\GrammarDefinition;
+use Resrap\Component\Grammar\Ast\GrammarFile;
+use Resrap\Component\Grammar\Ast\RuleDefinition;
+use Resrap\Component\Grammar\Ast\RuleToken;
+use Resrap\Component\Grammar\Ast\UseStatement;
 use Resrap\Component\Parser\GrammarRule;
 
-final class EbnfGrammar
+final class GrammarSpecification
 {
     public static function file(): GrammarRule
     {
         return new GrammarRule('grammar_file')
-            ->is(self::className(...), self::useStatementList(...), self::listOfGrammarDefinitions(...))
+            ->is(self::className(...), self::optionalUseStatementList(...), self::listOfGrammarDefinitions(...))
             ->then(fn(array $m) => new GrammarFile(
                 $m[0],
                 $m[1],
@@ -27,24 +27,42 @@ final class EbnfGrammar
     public static function className(): GrammarRule
     {
         return new GrammarRule('class_name')
-            ->is(EbnfToken::CLASSNAME, EbnfToken::IDENTIFIER)
+            ->is(Token::DEFINE_CLASSNAME, Token::IDENTIFIER, Token::SEMICOLON)
             ->then(fn(array $m) => $m[1]);
+    }
+
+    public static function qualifiedIdentifier(): GrammarRule
+    {
+        return new GrammarRule('qualified_identifier')
+            ->is(Token::IDENTIFIER)
+            ->then(fn(array $m) => $m[0])
+            ->is(Token::IDENTIFIER, Token::BACKSLASH, self::qualifiedIdentifier(...))
+            ->then(fn(array $m) => "{$m[0]}\\{$m[2]}");
     }
 
     public static function useStatement(): GrammarRule
     {
         return new GrammarRule('use_statement')
-            ->is(EbnfToken::USE, EbnfToken::QUALIFIED_IDENTIFIER)
+            ->is(Token::USE, self::qualifiedIdentifier(...), Token::SEMICOLON)
             ->then(fn(array $m) => new UseStatement($m[1]));
     }
 
     public static function useStatementList(): GrammarRule
     {
         return new GrammarRule('use_statement_list')
-            ->is()
-            ->then(fn(array $m) => [])
+            ->is(self::useStatement(...))
+            ->then(fn(array $m) => [$m[0]])
             ->is(self::useStatement(...), self::useStatementList(...))
             ->then(fn(array $m) => [$m[0], ...$m[1]]);
+    }
+
+    public static function optionalUseStatementList(): GrammarRule
+    {
+        return new GrammarRule('optional_use_statement_list')
+            ->is()
+            ->then(fn(array $m) => [])
+            ->is(self::useStatementList(...))
+            ->then(fn(array $m) => $m[0]);
     }
 
     public static function listOfGrammarDefinitions(): GrammarRule
@@ -60,10 +78,10 @@ final class EbnfGrammar
     {
         return new GrammarRule('grammar_definition')
             ->is(
-                EbnfToken::IDENTIFIER,
-                EbnfToken::ASSIGN,
+                Token::IDENTIFIER,
+                Token::ASSIGN,
                 self::listOfMultipleRulesDefinitions(...),
-                EbnfToken::SEMICOLON,
+                Token::SEMICOLON,
             )
             ->then(fn(array $m) => new GrammarDefinition(
                 $m[0],
@@ -74,14 +92,14 @@ final class EbnfGrammar
     public static function ruleIdentifier(): GrammarRule
     {
         return new GrammarRule('rule_identifier')
-            ->is(EbnfToken::QUALIFIED_IDENTIFIER, EbnfToken::STATIC_ACCESS, EbnfToken::IDENTIFIER)
-            ->then(fn(array $m) => new RuleToken("{$m[0]}::{$m[1]}", false))
-            ->is(EbnfToken::IDENTIFIER)
-            ->then(fn(array $m) => new RuleToken($m[0], false))
-            ->is(EbnfToken::CHAR)
-            ->then(fn(array $m) => new RuleToken($m[0], true))
-            ->is(EbnfToken::STRING)
-            ->then(fn(array $m) => new RuleToken($m[0], true));
+            ->is(self::qualifiedIdentifier(...), Token::STATIC_ACCESS, Token::IDENTIFIER)
+            ->then(fn(array $m) => new RuleToken("{$m[0]}::{$m[2]}", RuleToken::TOK))
+            ->is(Token::IDENTIFIER)
+            ->then(fn(array $m) => new RuleToken($m[0], RuleToken::EXPR))
+            ->is(Token::CHAR)
+            ->then(fn(array $m) => new RuleToken($m[0], RuleToken::LITERAL))
+            ->is(Token::STRING)
+            ->then(fn(array $m) => new RuleToken($m[0], RuleToken::LITERAL));
     }
 
     public static function ruleDefinitionList(): GrammarRule
@@ -96,8 +114,8 @@ final class EbnfGrammar
     public static function ruleDefinition(): GrammarRule
     {
         return new GrammarRule('rule_definition')
-            ->is(self::ruleDefinitionList(...), EbnfToken::CODE_BLOCK)
-            ->then(fn(array $m) => new GrammarRuleDefinition(
+            ->is(self::ruleDefinitionList(...), Token::CODE_BLOCK)
+            ->then(fn(array $m) => new RuleDefinition(
                 $m[0],
                 trim($m[1]),
             ));
@@ -108,7 +126,7 @@ final class EbnfGrammar
         return new GrammarRule('list_of_multiple_rules_definitions')
             ->is(self::ruleDefinition(...))
             ->then(fn(array $m) => [$m[0]])
-            ->is(self::ruleDefinition(...), EbnfToken::PIPE, self::listOfMultipleRulesDefinitions(...))
+            ->is(self::ruleDefinition(...), Token::PIPE, self::listOfMultipleRulesDefinitions(...))
             ->then(fn(array $m) => [$m[0], ...$m[2]]);
     }
 }

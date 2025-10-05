@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Resrap\Component\Ebnf;
+namespace Resrap\Component\Grammar;
 
-use Resrap\Component\Ebnf\Ast\GrammarFile;
+use Resrap\Component\Grammar\Ast\GrammarFile;
 use Resrap\Component\Parser\Parser;
 
 /**
@@ -12,13 +12,13 @@ use Resrap\Component\Parser\Parser;
  * This parser utilizes a specific scanner and grammar configuration to interpret and process
  * EBNF input strings, producing a structured grammar representation as output.
  */
-final readonly class EbnfParser
+final readonly class GrammarParser
 {
     private Parser $parser;
 
     public function __construct()
     {
-        $this->parser = new Parser(EbnfScanner::create(), EbnfGrammar::file());
+        $this->parser = Parser::fromGrammar( GrammarSpecification::file(), GrammarScanner::create());
     }
 
     public function parse(string $input): GrammarFile

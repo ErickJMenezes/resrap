@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Resrap\Component\Ebnf\Ast;
+namespace Resrap\Component\Grammar\Ast;
 
 final readonly class GrammarFile implements Node
 {
