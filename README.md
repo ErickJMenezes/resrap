@@ -1,21 +1,25 @@
 # Resrap — Parser and scanner utils
 
-*WARNING: This package is not intended for serious usage.*
+_WARNING: This package is not intended for serious usage._
 
 It's not a framework, but it's a good starting point for building your own parser and a regexp-based scanner.
 
 ## Requirements
+
 - PHP ^8.4
 
 ## Installation
+
 ```bash
 composer require erickjmenezes/resrap
 ```
 
 ## Examples
+
 Two runnable examples are included.
 
 ### Math calculator (toy) example
+
 - [examples/Math/main.php](./examples/Math/main.php) — entry point
 
 Run it:
@@ -26,6 +30,7 @@ php examples/Math/main.php
 ```
 
 ### JSON Parser example
+
 - [examples/Json/main.php](./examples/Json/main.php)
 
 Run it:
@@ -36,63 +41,80 @@ php examples/Json/main.php
 ```
 
 ## Quickstart
+
 ### 1. Declare the tokens your program needs
+
 ```php
-enum Token {
+enum MathToken
+{
     case NUMBER;
     case PLUS;
+    case MINUS;
+    case TIMES;
+    case DIV;
 }
 ```
 
 ### 2. Create a Scanner
+
 ```php
 use Resrap\Component\Scanner\{ScannerInterface, ScannerBuilder, Pattern, ScannerToken};
 
 function create_scanner(): ScannerInterface
 {
     return new ScannerBuilder(
-        new Pattern('\d+', Token::NUMBER),
-        new Pattern('\+', Token::PLUS),
-        new Pattern('[\s\r\t\n]++', ScannerToken::SKIP),
-    )->build();
+        // skip whitespace
+        new Pattern('[\s\t\n\r]+', ScannerToken::SKIP),
+        // tokens
+        new Pattern('{NUMBER}', MathToken::NUMBER),
+        new Pattern('\+', MathToken::PLUS),
+        new Pattern('-', MathToken::MINUS),
+        new Pattern('\*', MathToken::TIMES),
+        new Pattern('\\/', MathToken::DIV),
+    )
+        ->aliases([
+            'NUMBER' => '[0-9]+',
+        ])
+        ->build();
 }
 ```
 
 ### 3. Create grammar rules to parse your tokens
 
-```php
-use Resrap\Component\Parser\GrammarRule;
+```
+%class MathParser;
 
-function create_grammar(): GrammarRule
-{
-    // number := T_NUMBER
-    $number = new GrammarRule('number')
-        ->is(Token::NUMBER)
-        // return the value of the first matched token
-        ->then(fn(array $m) => (int) $m[0]);
+%use Whatever\Namespace\Of\MathToken;
 
-    // add := number | number T_PLUS add
-    $add = new GrammarRule('add')
-        // number
-        ->is($number)
-        ->then(fn(array $m) => $m[0]);
-    $add
-        // number T_PLUS add
-        ->is($number, Token::PLUS, $add)
-        ->then(fn(array $m) => $m[0] + $m[2]);
+%start calculator;
 
-    return $add;
-}
+number := MathToken::NUMBER { return $1; }
+        ;
+
+operator := MathToken::PLUS     { return $1; }
+          | MathToken::MINUS    { return $1; }
+          | MathToken::TIMES    { return $1; }
+          | MathToken::DIV      { return $1; }
+          ;
+
+expression := number                     { return $1; }
+            | number operator expression { return "{$1} {$2} {$3}"; }
+            ;
+
+calculator := expression { return eval("return {$1};"); }
+            ;
 ```
 
-### 4. Parse the input
+### 4. Generate the parser
+
+```bash
+php bin/resrap gen my-grammar.r > MathParser.php
+```
+
+### 5. Use the parser
 
 ```php
-use Resrap\Component\Parser\Parser;
+$parser = new MathParser(create_scanner());
 
-$scanner = create_scanner();
-$grammar = create_grammar();
-$parser = Parser::fromGrammar($grammar, $scanner);
 echo $parser->parse('1 + 2 + 3'); // 6
 ```
-

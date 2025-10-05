@@ -24,11 +24,6 @@ final class GrammarCompiler implements CompilerBackendInterface
      */
     private array $rules = [];
 
-    /**
-     * @var array<string>
-     */
-    private array $closuresCode = [];
-
     private array $uses = [];
 
     public function compile(GrammarFile $ast)
@@ -41,6 +36,10 @@ final class GrammarCompiler implements CompilerBackendInterface
             $this->rules[$grammarDefinition->name] = new GrammarRule($grammarDefinition->name);
         }
 
+        if (!array_key_exists($ast->start, $this->rules)) {
+            throw CompileException::invalidStartingPoint($ast->start);
+        }
+
         foreach ($ast->uses as $use) {
             $parts = explode('\\', $use->name);
             $this->uses[$parts[count($parts) - 1]] = $use->name;
@@ -50,7 +49,7 @@ final class GrammarCompiler implements CompilerBackendInterface
             $this->compileGrammarDefinitions($grammarDefinition);
         }
 
-        return $this->rules[$ast->grammarDefinitions[0]->name];
+        return $this->rules[$ast->start];
     }
 
     private function resolveToken(RuleToken $token): GrammarRule|UnitEnum|string
@@ -82,8 +81,7 @@ final class GrammarCompiler implements CompilerBackendInterface
     {
         $symbols = $this->resolveSymbols($ruleDefinition->tokens);
 
-        [$callback, $code] = $this->compileCallback($ruleDefinition->codeBlock);
-        $this->closuresCode[] = $code;
+        $callback = $this->compileCallback($ruleDefinition->codeBlock);
 
         $rule->is(...$symbols)->then($callback);
     }
@@ -102,31 +100,11 @@ final class GrammarCompiler implements CompilerBackendInterface
         return $result;
     }
 
-    /**
-     * @return array{Closure,string}
-     * @throws CompileException
-     */
-    private function compileCallback(string $codeBlock): array
+    private function compileCallback(string $codeBlock): Closure
     {
         $code = trim($codeBlock);
-        $closureCode = "static function (array \$m) { $code }";
-
-        try {
-            $closure = eval("return $closureCode;");
-
-            if (!$closure instanceof Closure) {
-                throw CompileException::invalidCallbackCode();
-            }
-
-            return [$closure, $closureCode];
-        } catch (\Throwable $e) {
-            throw CompileException::failedToCompileCallback($e, $code);
-        }
-    }
-
-    public function getClosures(): array
-    {
-        return $this->closuresCode;
+        $closureCode = "function (array \$m) { $code }";
+        return fn() => $closureCode;
     }
 
     public function getUses(): array

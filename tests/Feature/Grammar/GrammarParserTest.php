@@ -9,9 +9,11 @@ use Resrap\Component\Scanner\Position;
 test('must parse a grammar file', function () {
     $text = '
     %class MyGrammar;
-
+    
     %use Add\\More;
     %use Add;
+    
+    %start expr;
 
     expr := expr \'+\' Add::More { return new Add($1, $3); }
           | term            { return $1; }
@@ -49,6 +51,7 @@ test('must parse a grammar file', function () {
 test('must parse a grammar file without uses', function () {
     $text = '
     %class MyGrammar;
+    %start expr;
 
     expr := expr \'+\' term { return new Add($1, $3); }
           | term            { return $1; }

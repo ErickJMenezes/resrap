@@ -23,4 +23,9 @@ class CompileException extends RuntimeException
     {
         return new self("Failed to compile callback: {$previous->getMessage()}\nCode: $code", 0, $previous);
     }
+
+    public static function invalidStartingPoint(string $startingPoint): self
+    {
+        return new self("Invalid starting point: {$startingPoint}");
+    }
 }

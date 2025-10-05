@@ -3,6 +3,7 @@
   "description": "parser utils",
   "type": "library",
   "license": "mit",
+  "bin": ["bin/resrap"],
   "autoload": {
     "psr-4": {
       "Resrap\\Component\\": "src/"

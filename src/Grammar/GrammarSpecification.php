@@ -16,12 +16,25 @@ final class GrammarSpecification
     public static function file(): GrammarRule
     {
         return new GrammarRule('grammar_file')
-            ->is(self::className(...), self::optionalUseStatementList(...), self::listOfGrammarDefinitions(...))
+            ->is(
+                self::className(...),
+                self::optionalUseStatementList(...),
+                self::start(...),
+                self::listOfGrammarDefinitions(...),
+            )
             ->then(fn(array $m) => new GrammarFile(
                 $m[0],
                 $m[1],
                 $m[2],
+                $m[3],
             ));
+    }
+
+    public static function start(): GrammarRule
+    {
+        return new GrammarRule('start')
+            ->is(Token::START, Token::IDENTIFIER, Token::SEMICOLON)
+            ->then(fn(array $m) => $m[1]);
     }
 
     public static function className(): GrammarRule

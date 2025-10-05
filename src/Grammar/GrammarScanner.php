@@ -42,7 +42,7 @@ final class GrammarScanner
             // Code blocks (semantic actions) → everything inside `{ ... }`
             // NOTE: This should come *after* structural `{` so it's only used
             // in the right parsing context.
-            new Pattern("\{([^}]*)\}", function (string &$value, array $groups) {
+            new Pattern("\{((?:[^{}\"'\/]|\"(?:[^\"\\\\]|\\\\.)*\"|'(?:[^'\\\\]|\\\\.)*'|\/\/[^\n]*|\/\*(?:[^*]|\*(?!\/))*\*\/|(?R))*)\}", function (string &$value, array $groups) {
                 // strip outer braces and whitespaces
                 $value = trim($groups[0]);
                 // replace `$(number)` with `$m[$(number) - 1]` to convert to valid php code.
@@ -58,6 +58,9 @@ final class GrammarScanner
 
             // Classnames
             new Pattern('(?:%classname|%class)', Token::DEFINE_CLASSNAME),
+
+            // Start
+            new Pattern('%start', Token::START),
 
             // Use
             new Pattern('(?:%use|%import)', Token::USE),

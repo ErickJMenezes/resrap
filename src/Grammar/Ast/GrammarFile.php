@@ -13,6 +13,7 @@ final readonly class GrammarFile implements Node
     public function __construct(
         public string $classname,
         public array $uses,
+        public string $start,
         public array $grammarDefinitions,
     ) {}
 }

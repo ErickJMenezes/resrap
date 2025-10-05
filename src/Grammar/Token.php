@@ -14,9 +14,10 @@ enum Token
     case CHAR;                  // 'a'
     case COMMENT;               // (skip)
     case CODE_BLOCK;            // { ... }
-    // Special php instructions
-    case DEFINE_CLASSNAME;             // %class FooBar
-    case BACKSLASH; // \
+    // Special instructions
+    case DEFINE_CLASSNAME;      // %class FooBar
+    case BACKSLASH;             // \
     case USE;                   // %use FooBar
+    case START;                 // %start foo
     case STATIC_ACCESS;         // ::
 }
