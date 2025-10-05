@@ -82,7 +82,6 @@ test('must parse a grammar file without uses', function () {
         );
 });
 
-
 test('must throw and error when it founds invalid grammar', function () {
     $text = 'expr := expr \'+\' term // without code block
                    | term            { return $1; }
@@ -96,4 +95,35 @@ test('must throw and error when it founds invalid grammar', function () {
             'expr',
             ['DEFINE_CLASSNAME']
         ));
+});
+
+test('must parse empty production', function () {
+    $text = '
+    %class MyGrammar;
+    %start expr;
+    expr := expr "+" term { return new Add($1, $3); }
+          |               { return $1; }
+          ;
+    ';
+
+    $parser = new GrammarParser();
+    $result = $parser->parse($text);
+    expect($result)
+        ->toBeInstanceOf(GrammarFile::class)
+        ->classname
+        ->toBe('MyGrammar')
+        ->uses
+        ->toHaveCount(0)
+        ->grammarDefinitions
+        ->toHaveCount(1)
+        ->sequence(
+            fn(Expectation $grammar) => $grammar
+                ->rules->toHaveCount(2)
+                ->sequence(
+                    fn(Expectation $grammar) => $grammar
+                        ->tokens->toHaveCount(3),
+                    fn(Expectation $grammar) => $grammar
+                        ->tokens->toHaveCount(0),
+                ),
+        );
 });

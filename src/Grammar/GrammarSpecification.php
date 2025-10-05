@@ -131,6 +131,12 @@ final class GrammarSpecification
             ->then(fn(array $m) => new RuleDefinition(
                 $m[0],
                 trim($m[1]),
+            ))
+            // Empty Production
+            ->is(Token::CODE_BLOCK)
+            ->then(fn(array $m) => new RuleDefinition(
+                [],
+                trim($m[0]),
             ));
     }
 
