@@ -11,7 +11,7 @@ namespace Resrap\Component\Scanner;
 final class ScannerBuilder
 {
     /**
-     * @var array<string, array{string, string}>
+     * @var array<string, string>
      */
     private array $aliases = [];
 
@@ -40,17 +40,7 @@ final class ScannerBuilder
 
     private function preparePatterns(): array
     {
-        $aliases = array_keys($this->aliases);
-        $replacements = array_values($this->aliases);
-        $patterns = [];
-        foreach ($this->matchers as $matcher) {
-            $currentPattern = str_replace(
-                $aliases,
-                $replacements,
-                "^$matcher->pattern",
-            );
-            $patterns["/$currentPattern/xs"] = $matcher->handler;
-        }
-        return $patterns;
+        return new PatternBuilder($this->matchers, $this->aliases)
+            ->build();
     }
 }

@@ -4,6 +4,7 @@ namespace Resrap\Tests\Unit;
 
 use Resrap\Component\Parser\GrammarRule;
 use Resrap\Component\Parser\Parser;
+use Resrap\Component\Scanner\InputBuffer;
 use Resrap\Component\Scanner\Position;
 use Resrap\Component\Scanner\Scanner;
 use Resrap\Component\Scanner\ScannerToken;
@@ -20,13 +21,13 @@ class SimpleScanner implements Scanner
     private array $tokens = [];
     private int $index = 0;
 
-    public function setInput(string $input): void
+    public function setInput(InputBuffer $input): void
     {
-        $this->tokens = match ($input) {
+        $this->tokens = match ($input->content) {
             'a' => [TestToken::A],
             'b' => [TestToken::B],
             '' => [],
-            default => throw new Exception("Unknown input: $input")
+            default => throw new Exception("Unknown input: $input->content")
         };
         $this->index = 0;
     }

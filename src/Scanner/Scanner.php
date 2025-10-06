@@ -33,11 +33,11 @@ interface Scanner
     /**
      * Sets the input string to be processed or used.
      *
-     * @param string $input The input value to be set.
+     * @param InputBuffer $input The input value to be set.
      *
      * @return void
      */
-    public function setInput(string $input): void;
+    public function setInput(InputBuffer $input): void;
 
     /**
      * Returns the position of the previous token returned by the scanner.

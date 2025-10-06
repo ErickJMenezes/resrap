@@ -70,9 +70,9 @@ final class RegexScanner implements Scanner
         return $this->value;
     }
 
-    public function setInput(string $input): void
+    public function setInput(InputBuffer $input): void
     {
-        $this->buffer = new InputBuffer($input);
+        $this->buffer = $input;
     }
 
     public function lastTokenPosition(): Position

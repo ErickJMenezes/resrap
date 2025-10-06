@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Resrap\Component\Parser;
 
+use Resrap\Component\Scanner\InputBuffer;
 use Resrap\Component\Scanner\Scanner;
 use Resrap\Component\Scanner\ScannerToken;
 use RuntimeException;
@@ -35,7 +36,7 @@ final readonly class Parser
 
     public function parse(string $input): mixed
     {
-        $this->scanner->setInput($input);
+        $this->scanner->setInput(new InputBuffer($input));
         $stateStack = [0];
         $valueStack = [];
         $token = null;
