@@ -17,8 +17,9 @@ final class PatternBuilder
 
     public function build(): array
     {
-        $aliases = array_keys($this->aliases);
-        $replacements = array_values($this->aliases);
+        $rawAliases = $this->prepareAliases();
+        $aliases = array_keys($rawAliases);
+        $replacements = array_values($rawAliases);
         $patterns = [];
         foreach ($this->matchers as $matcher) {
             $currentPattern = str_replace(
@@ -29,5 +30,14 @@ final class PatternBuilder
             $patterns["/$currentPattern/xs"] = $matcher->handler;
         }
         return $patterns;
+    }
+
+    private function prepareAliases(): array
+    {
+        $aliases = [];
+        foreach ($this->aliases as $alias => $pattern) {
+            $aliases['{'.$alias.'}'] = $pattern;
+        }
+        return $aliases;
     }
 }

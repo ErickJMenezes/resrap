@@ -5,76 +5,96 @@ namespace Resrap;
 
 use Resrap\Component\Grammar\Backend\CompileException;
 use Resrap\Component\Grammar\GrammarFileCompiler;
+use Resrap\Component\Grammar\GrammarParser;
 use Resrap\Component\Parser\ParserException;
 use Resrap\Component\Scanner\ScannerException;
 
-include $_composer_autoload_path ?? __DIR__ . '/../vendor/autoload.php';
+include $_composer_autoload_path ?? __DIR__.'/../vendor/autoload.php';
 
 function print_help(): void
 {
-    echo <<<HELP
-  _____
- |  __ \
- | |__) |___  ___ _ __ __ _ _ __
- |  _  // _ \/ __| '__/ _` | '_ \
- | | \ \  __/\__ \ | | (_| | |_) |
- |_|  \_\___||___/_|  \__,_| .__/
-                           | |
-                           |_|
-HELP;
-    echo "\n";
-    echo "Usage: resrap [command]\n";
-    echo "\n";
-    echo "Commands:\n";
-    echo "  help\t\t\tDisplay this help message.\n";
-    echo "  help [command]\tDisplay help for a specific command.\n";
-    echo "  gen\t\t\tGenerate parser from grammar file.\n";
-    echo "\n";
+  echo <<<HELP
+     _____
+    |  __ \
+    | |__) |___  ___ _ __ __ _ _ __
+    |  _  // _ \/ __| '__/ _` | '_ \
+    | | \ \  __/\__ \ | | (_| | |_) |
+    |_|  \_\___||___/_|  \__,_| .__/
+                              | |
+                              |_|
+    HELP;
+  echo "\n";
+  echo "Usage: resrap [command]\n";
+  echo "\n";
+  echo "Commands:\n";
+  echo "  help\t\t\tDisplay this help message.\n";
+  echo "  help [command]\tDisplay help for a specific command.\n";
+  echo "  compile\t\tCompile your grammar file to generate a parser.\n";
+  echo "  validate\t\tValidate your grammar file to find any syntax errors.\n";
+  echo "\n";
 }
 
 function help_for(string $command): void
 {
-    switch ($command) {
-        case "gen":
-            global $argv;
-            echo "Generate parser from grammar file.\n";
-            echo "\n";
-            echo "Usage:\n";
-            echo "  {$argv[0]} gen <grammar/file/path> > MyFile.php\n";
-            break;
-        default:
-            print_help();
-    }
+  switch ($command) {
+    case "compile":
+      global $argv;
+      echo "Compile your grammar file to generate a parser.\n";
+      echo "\n";
+      echo "Usage:\n";
+      echo "  {$argv[0]} compile <grammar/file/path> > MyFile.php\n";
+      break;
+    case "validate":
+      global $argv;
+      echo "Validate your grammar file to find any syntax errors.\n";
+      echo "\n";
+      echo "Usage:\n";
+      echo "  {$argv[0]} validate <grammar/file/path>\n";
+      break;
+    default:
+      print_help();
+  }
 }
 
 
 if ($argc < 2) {
-    print_help();
-    exit(0);
+  print_help();
+  exit(0);
 }
 
 [, $command] = $argv;
 $commandArgs = array_slice($argv, 2);
 
 switch ($command) {
-    case 'help':
-        help_for($commandArgs[0] ?? '');
-        break;
-    case 'gen':
-        $grammarFile = $commandArgs[0] ?? '';
-        if ($grammarFile === '') {
-            echo "Please, specify a grammar file.\n";
-            exit(1);
-        }
-        if (!is_file($grammarFile)) {
-            echo "The grammar file [{$grammarFile}] does not exists or is not accessible.\n";
-            exit(1);
-        }
-        $compiler = new GrammarFileCompiler();
-      try {
-        echo "<?php\n\n".$compiler->compile(file_get_contents($grammarFile));
-      } catch (ParserException|ScannerException|CompileException $e) {
-        echo $e->getMessage() . "\n";
-        exit(1);
-      }
+  case 'help':
+    help_for($commandArgs[0] ?? '');
+    break;
+  case 'compile':
+    $grammarFile = $commandArgs[0] ?? '';
+    if ($grammarFile === '') {
+      echo "Please, specify a grammar file.\n";
+      exit(1);
+    }
+    if (!is_file($grammarFile)) {
+      echo "The grammar file [{$grammarFile}] does not exists or is not accessible.\n";
+      exit(1);
+    }
+    $compiler = new GrammarFileCompiler();
+    try {
+      echo "<?php\n\n".$compiler->compile(file_get_contents($grammarFile));
+    } catch (ParserException|ScannerException|CompileException $e) {
+      echo $e->getMessage()."\n";
+      exit(1);
+    }
+    break;
+  case 'validate':
+    $grammarFile = $commandArgs[0] ?? '';
+    try {
+      new GrammarParser()->parse(file_get_contents($grammarFile));
+    } catch (ParserException|ScannerException|CompileException $e) {
+      echo $e->getMessage()."\n";
+      exit(1);
+    }
+    echo "Grammar file is valid.\n";
+    break;
 }

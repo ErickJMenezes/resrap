@@ -15,6 +15,9 @@ final class ScannerBuilder
      */
     private array $aliases = [];
 
+    /**
+     * @var Pattern[]
+     */
     private array $matchers;
 
     /**
@@ -27,20 +30,16 @@ final class ScannerBuilder
 
     public function aliases(array $aliases): self
     {
-        foreach ($aliases as $alias => $pattern) {
-            $this->aliases['{'.$alias.'}'] = $pattern;
-        }
+        $this->aliases = $aliases;
         return $this;
     }
 
     public function build(): Scanner
     {
-        return new RegexScanner($this->preparePatterns());
-    }
-
-    private function preparePatterns(): array
-    {
-        return new PatternBuilder($this->matchers, $this->aliases)
+        // since this is a single state scanner, we can pass an empty array of transitions and states.
+        return new StatefulScannerBuilder()
+            ->aliases($this->aliases)
+            ->state('main', $this->matchers, [])
             ->build();
     }
 }

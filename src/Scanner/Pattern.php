@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Resrap\Component\Scanner;
 
 use Closure;
+use InvalidArgumentException;
 use UnitEnum;
 
 /**
@@ -31,6 +32,9 @@ final readonly class Pattern
         string $pattern,
         UnitEnum|Closure $handler,
     ) {
+        if (empty($pattern)) {
+            throw new InvalidArgumentException('Pattern cannot be empty.');
+        }
         $this->pattern = $pattern;
         $this->handler = match (true) {
             $handler instanceof UnitEnum => fn(): UnitEnum => $handler,

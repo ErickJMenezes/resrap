@@ -13,6 +13,8 @@ use UnitEnum;
  * This class processes a given input string and matches it against a series
  * of regular expression patterns provided during instantiation. It extracts
  * tokens based on these patterns and executes corresponding handler functions.
+ *
+ * @internal This class is not part of the public API and may be subject to change or removal in future releases.
  */
 final class RegexScanner implements Scanner
 {
@@ -23,32 +25,54 @@ final class RegexScanner implements Scanner
     private ?Position $lastTokenPosition = null;
 
     /**
-     * @param array<string, Closure(string&,array): (int|UnitEnum)> $patterns
+     * @param State[] $states
      */
-    public function __construct(private readonly array $patterns)
-    {
-    }
+    public function __construct(private State $activeState, private array $states) {}
 
     public function lex(): UnitEnum
     {
         if ($this->buffer->eof) {
             return ScannerToken::EOF;
         }
-        do {
-            $token = $this->tokenize();
-        } while ($token === ScannerToken::SKIP);
-        if ($token === ScannerToken::ERROR) {
-            throw ScannerException::unexpectedCharacter(substr($this->buffer->content, 0, 1));
+        [$token, $consumed] = $this->scanNextToken();
+        $nextStateName = $this->activeState->getTransitionStateFor($token);
+        if ($nextStateName !== false) {
+            $this->activeState = $this->states[$nextStateName];
+        }
+        if ($consumed > 0) {
+            $this->buffer->consume($consumed);
         }
         return $token;
     }
 
-    private function tokenize(): int|UnitEnum
+    /**
+     * @return array{int|UnitEnum, int}
+     */
+    private function scanNextToken(): array
+    {
+        do {
+            [$token, $consumed] = $this->applyPatterns();
+            if ($token === ScannerToken::SKIP) {
+                $this->buffer->consume($consumed);
+                continue;
+            }
+            break;
+        } while (true);
+        if ($token === ScannerToken::ERROR) {
+            throw ScannerException::unexpectedCharacter(substr($this->buffer->content, 0, 1));
+        }
+        return [$token, $consumed];
+    }
+
+    /**
+     * @return array{int|UnitEnum, int}
+     */
+    private function applyPatterns(): array
     {
         if ($this->buffer->eof) {
-            return ScannerToken::EOF;
+            return [ScannerToken::EOF, 0];
         }
-        foreach ($this->patterns as $regexp => $handler) {
+        foreach ($this->activeState->patterns as $regexp => $handler) {
             $matches = [];
             preg_match($regexp, $this->buffer->content, $matches);
             if (count($matches) === 0) {
@@ -57,12 +81,11 @@ final class RegexScanner implements Scanner
             $this->lastTokenPosition = $this->buffer->position;
             $value = array_shift($matches);
             $size = strlen($value);
-            $this->buffer->consume($size);
             $handlerResult = $handler($value, $matches);
             $this->value = $value;
-            return $handlerResult;
+            return [$handlerResult, $size];
         }
-        return ScannerToken::ERROR;
+        return [ScannerToken::ERROR, 0];
     }
 
     public function value(): ?string
