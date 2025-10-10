@@ -1,5 +1,7 @@
 %class MathParser;
 
+%namespace Resrap\Examples\Math;
+
 %use Resrap\Examples\Math\MathToken;
 
 %start calculator;

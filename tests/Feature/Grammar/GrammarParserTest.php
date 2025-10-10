@@ -28,8 +28,8 @@ test('must parse a grammar file', function () {
         ->uses
         ->toHaveCount(2)
         ->sequence(
-            fn(Expectation $use) => $use->name->toBe('Add\\More'),
-            fn(Expectation $use) => $use->name->toBe('Add'),
+            fn(Expectation $use) => $use->toHaveProperty('value', 'Add\\More'),
+            fn(Expectation $use) => $use->toHaveProperty('value', 'Add'),
         )
         ->grammarDefinitions
         ->toHaveCount(1)
@@ -93,7 +93,7 @@ test('must throw and error when it founds invalid grammar', function () {
             new Position(0,1, 1),
             'IDENTIFIER',
             'expr',
-            ['DEFINE_CLASSNAME']
+            ['NAMESPACE', 'DEFINE_CLASSNAME', 'START', 'USE']
         ));
 });
 

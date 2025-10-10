@@ -14,11 +14,11 @@ use Resrap\Component\Parser\Parser;
  */
 final readonly class GrammarParser
 {
-    private Parser $parser;
+    private GrammarFileParser $parser;
 
     public function __construct()
     {
-        $this->parser = Parser::fromGrammar( GrammarSpecification::file(), GrammarScanner::create());
+        $this->parser = new GrammarFileParser(GrammarScanner::create());
     }
 
     public function parse(string $input): GrammarFile

@@ -42,11 +42,11 @@ final class GrammarCompiler implements CompilerBackendInterface
 
         foreach ($ast->uses as $use) {
             if ($use->alias !== null) {
-                $this->uses[$use->alias] = $use->name;
+                $this->uses[$use->alias] = $use->value;
                 continue;
             }
-            $parts = explode('\\', $use->name);
-            $this->uses[$parts[count($parts) - 1]] = $use->name;
+            $parts = explode('\\', $use->value);
+            $this->uses[$parts[count($parts) - 1]] = $use->value;
         }
 
         foreach ($ast->grammarDefinitions as $grammarDefinition) {

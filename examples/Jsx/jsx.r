@@ -1,4 +1,5 @@
 %class JsxParser;
+%namespace Resrap\Examples\Jsx;
 %use Resrap\Examples\Jsx\JsxToken;
 %use Resrap\Examples\Jsx\Ast\Program;
 %use Resrap\Examples\Jsx\Ast\ConstDeclaration;
@@ -21,10 +22,10 @@ statement := constDeclaration { return $1; }
            | expression        { return $1; }
            ;
 
-constDeclaration := JsxToken::CONST 
-                    JsxToken::IDENTIFIER 
-                    JsxToken::EQUALS 
-                    expression 
+constDeclaration := JsxToken::CONST
+                    JsxToken::IDENTIFIER
+                    JsxToken::EQUALS
+                    expression
                     JsxToken::SEMICOLON
                   { return new ConstDeclaration($2, $4); }
                   ;
@@ -53,11 +54,11 @@ jsxWithChildren := JsxToken::JSX_TAG_OPEN
                    JsxToken::JSX_TAG_END_OPEN
                    JsxToken::IDENTIFIER
                    JsxToken::JSX_TAG_CLOSE
-                 { 
+                 {
                      if ($2 !== $7) {
                          throw new \Exception("Mismatched tags: <$2> and </$7>");
                      }
-                     return new JsxElement($2, $3, $5); 
+                     return new JsxElement($2, $3, $5);
                  }
                  ;
 
@@ -65,14 +66,14 @@ jsxAttributes := jsxAttribute jsxAttributes { return [$1, ...$2]; }
                |                            { return []; }
                ;
 
-jsxAttribute := JsxToken::JSX_ATTR_NAME 
-                JsxToken::EQUALS 
+jsxAttribute := JsxToken::JSX_ATTR_NAME
+                JsxToken::EQUALS
                 JsxToken::STRING
               { return new JsxAttribute($1, $3); }
-              | JsxToken::JSX_ATTR_NAME 
-                JsxToken::EQUALS 
-                JsxToken::BRACE_OPEN 
-                expression 
+              | JsxToken::JSX_ATTR_NAME
+                JsxToken::EQUALS
+                JsxToken::BRACE_OPEN
+                expression
                 JsxToken::BRACE_CLOSE
               { return new JsxAttribute($1, $4); }
               ;
@@ -83,8 +84,8 @@ jsxChildren := jsxChild jsxChildren { return [$1, ...$2]; }
 
 jsxChild := jsxElement                { return $1; }
           | JsxToken::JSX_TEXT        { return new TextNode($1); }
-          | JsxToken::BRACE_OPEN 
-            expression 
+          | JsxToken::BRACE_OPEN
+            expression
             JsxToken::BRACE_CLOSE     { return new Interpolation($2); }
           ;
 

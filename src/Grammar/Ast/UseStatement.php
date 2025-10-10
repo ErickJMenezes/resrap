@@ -4,14 +4,12 @@ declare(strict_types = 1);
 
 namespace Resrap\Component\Grammar\Ast;
 
-final readonly class UseStatement implements Node
+final readonly class UseStatement extends Directive
 {
-    /**
-     * @param string   $name
-     * @param string[] $values
-     */
     public function __construct(
-        public string $name,
+        string $value,
         public ?string $alias = null,
-    ) {}
+    ) {
+        parent::__construct('use', $value);
+    }
 }

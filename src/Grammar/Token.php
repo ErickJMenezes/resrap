@@ -16,6 +16,7 @@ enum Token
     case CODE_BLOCK;            // { ... }
     // Special instructions
     case DEFINE_CLASSNAME;      // %class FooBar;
+    case NAMESPACE;             // %namespace FooBar;
     case BACKSLASH;             // \
     case USE;                   // %use FooBar;
     case AS;                   // %use FooBar as F;

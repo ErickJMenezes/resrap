@@ -61,6 +61,9 @@ final class GrammarScanner
                     // Start
                     new Pattern('%start', Token::START),
 
+                    // Namespace
+                    new Pattern('%namespace', Token::NAMESPACE),
+
                     // Use
                     new Pattern('(?:%use|%import)', Token::USE),
 

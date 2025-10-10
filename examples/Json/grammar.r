@@ -1,5 +1,7 @@
 %class JsonParser;
 
+%namespace Resrap\Examples\Json;
+
 %use Resrap\Component\Parser\GrammarRule;
 %use Resrap\Examples\Json\Ast\JsonArray;
 %use Resrap\Examples\Json\Ast\JsonBoolean;

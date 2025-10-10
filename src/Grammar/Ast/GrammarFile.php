@@ -11,6 +11,7 @@ final readonly class GrammarFile implements Node
      * @param array<GrammarDefinition> $grammarDefinitions
      */
     public function __construct(
+        public ?string $namespace,
         public string $classname,
         public array $uses,
         public string $start,

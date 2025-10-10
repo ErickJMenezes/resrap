@@ -24,6 +24,7 @@ final class GrammarFileCompiler
         $table = new Table($rootRule);
 
         return $this->generateParser(
+            $grammarFile->namespace,
             $grammarFile->classname,
             $table,
             $grammarRulesCompiler->getUses(),
@@ -31,14 +32,18 @@ final class GrammarFileCompiler
     }
 
     private function generateParser(
+        ?string $namespace,
         string $classname,
         Table $table,
         array $uses,
     ): string
     {
         // $code = "<?php\n\n";
-        // $code .= "namespace Generated;\n\n";
-        $code = "use Resrap\\Component\\Parser\\Parser;\n";
+        $code = "declare (strict_types = 1);\n\n";
+        if ($namespace !== null) {
+            $code .= "namespace $namespace;\n\n";
+        }
+        $code .= "use Resrap\\Component\\Parser\\Parser;\n";
         $code .= "use Resrap\\Component\\Scanner\\Scanner;\n";
         foreach ($uses as $alias => $use) {
             if (str_ends_with($use, $alias)) {
