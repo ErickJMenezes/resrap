@@ -3,6 +3,7 @@
 namespace Resrap\Tests\Unit\Scanner;
 
 use Resrap\Component\Scanner\InputBuffer;
+use Resrap\Component\Scanner\ManualPattern;
 use Resrap\Component\Scanner\RegexScanner;
 use Resrap\Component\Scanner\ScannerToken;
 use Resrap\Component\Scanner\State;
@@ -80,4 +81,28 @@ test('must be able to change states', function () {
         ->and($scanner->value())
         ->toBe('foo')
     ;
+});
+
+test('pattern manual', function () {
+    $scanner = new RegexScanner(
+        new State(
+            'test',
+            [
+                '__manual_0' => new ManualPattern(function (string $buffer) {
+                    return [TestToken::Foo, 3, 'foo'];
+                }),
+            ]
+        ),
+        [],
+    );
+    $input = new InputBuffer('foo');
+    $scanner->setInput($input);
+    expect($scanner->lex())
+        ->toBe(TestToken::Foo)
+        ->and($scanner->value())
+        ->toBe('foo')
+        ->and($scanner->lex())
+        ->toBe(ScannerToken::EOF)
+        ->and($input->content)
+        ->toBeEmpty();
 });

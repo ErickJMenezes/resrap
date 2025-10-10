@@ -59,7 +59,10 @@ final class RegexScanner implements Scanner
             break;
         } while (true);
         if ($token === ScannerToken::ERROR) {
-            throw ScannerException::unexpectedCharacter(substr($this->buffer->content, 0, 1));
+            throw ScannerException::unexpectedCharacter(
+                substr($this->buffer->content, 0, 1),
+                $this->lastTokenPosition,
+            );
         }
         return [$token, $consumed];
     }
@@ -73,6 +76,18 @@ final class RegexScanner implements Scanner
             return [ScannerToken::EOF, 0];
         }
         foreach ($this->activeState->patterns as $regexp => $handler) {
+            if ($handler instanceof ManualPattern) {
+                $result = $handler->scan($this->buffer->content);
+
+                if ($result !== null) {
+                    [$token, $size, $value] = $result;
+                    $this->lastTokenPosition = $this->buffer->position;
+                    $this->value = $value;
+                    return [$token, $size];
+                }
+
+                continue;
+            }
             $matches = [];
             preg_match($regexp, $this->buffer->content, $matches);
             if (count($matches) === 0) {

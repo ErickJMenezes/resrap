@@ -33,9 +33,9 @@ final class StatefulScannerBuilder
     /**
      * Define a new state.
      *
-     * @param non-empty-string      $name
-     * @param Pattern[]             $patterns
-     * @param StateTransition[]     $transitions
+     * @param non-empty-string                        $name
+     * @param array<array-key, Pattern|ManualPattern> $patterns
+     * @param StateTransition[]                       $transitions
      *
      * @return $this
      * @author ErickJMenezes <erickmenezes.dev@gmail.com>

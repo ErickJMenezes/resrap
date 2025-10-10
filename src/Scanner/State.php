@@ -9,9 +9,9 @@ use UnitEnum;
 final readonly class State
 {
     /**
-     * @param string                                                $name
-     * @param array<string, Closure(string&,array): (int|UnitEnum)> $patterns
-     * @param StateTransition[]                                     $transitions
+     * @param string                                                                        $name
+     * @param array<string, (ManualPattern|Closure(string&,array,Scanner): (int|UnitEnum))> $patterns
+     * @param StateTransition[]                                                             $transitions
      */
     public function __construct(
         public string $name,

@@ -8,8 +8,10 @@ use RuntimeException;
 
 class ScannerException extends RuntimeException
 {
-    public static function unexpectedCharacter(string $char, null|string|int $at = null): self
+    public static function unexpectedCharacter(string $char, ?Position $at = null): self
     {
-        return new self("Unexpected character \"{$char}\" at position {$at}.");
+        $line = $at?->line ?? 0;
+        $column = $at?->column ?? 0;
+        return new self("Unexpected character \"{$char}\" at line {$line}:{$column}");
     }
 }
