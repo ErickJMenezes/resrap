@@ -4,7 +4,7 @@ namespace Resrap\Tests\Unit\Scanner;
 
 use Resrap\Component\Scanner\InputBuffer;
 use Resrap\Component\Scanner\ManualPattern;
-use Resrap\Component\Scanner\RegexScanner;
+use Resrap\Component\Scanner\StatefulRegexScanner;
 use Resrap\Component\Scanner\ScannerToken;
 use Resrap\Component\Scanner\State;
 use Resrap\Component\Scanner\StateTransition;
@@ -18,7 +18,7 @@ enum TestToken
 }
 
 test('must match a string and eof', function () {
-    $scanner = new RegexScanner(new State(
+    $scanner = new StatefulRegexScanner(new State(
         'test',
         ['/^foo/xs' => fn() => TestToken::Foo],
     ), []);
@@ -55,7 +55,7 @@ test('must be able to change states', function () {
             new StateTransition([TestToken::Back], 'first'),
         ]
     );
-    $scanner = new RegexScanner($state1, [
+    $scanner = new StatefulRegexScanner($state1, [
         $state1->name => $state1,
         $state2->name => $state2,
     ]);
@@ -84,7 +84,7 @@ test('must be able to change states', function () {
 });
 
 test('pattern manual', function () {
-    $scanner = new RegexScanner(
+    $scanner = new StatefulRegexScanner(
         new State(
             'test',
             [

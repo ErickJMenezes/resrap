@@ -16,7 +16,7 @@ use UnitEnum;
  *
  * @internal This class is not part of the public API and may be subject to change or removal in future releases.
  */
-final class RegexScanner implements Scanner
+final class StatefulRegexScanner implements Scanner
 {
     private ?string $value = null;
 
@@ -58,12 +58,6 @@ final class RegexScanner implements Scanner
             }
             break;
         } while (true);
-        if ($token === ScannerToken::ERROR) {
-            throw ScannerException::unexpectedCharacter(
-                substr($this->buffer->content, 0, 1),
-                $this->lastTokenPosition,
-            );
-        }
         return [$token, $consumed];
     }
 
@@ -100,6 +94,7 @@ final class RegexScanner implements Scanner
             $this->value = $value;
             return [$handlerResult, $size];
         }
+        $this->value = substr($this->buffer->content, 0, 1);
         return [ScannerToken::ERROR, 0];
     }
 

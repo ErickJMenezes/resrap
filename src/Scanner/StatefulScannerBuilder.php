@@ -83,7 +83,7 @@ final class StatefulScannerBuilder
             );
         }
         $initialState = $states[$this->initialStateName];
-        return new RegexScanner($initialState, $states);
+        return new StatefulRegexScanner($initialState, $states);
     }
 
     public function setInitialState(string $name): self

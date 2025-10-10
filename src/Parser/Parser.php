@@ -57,7 +57,7 @@ final readonly class Parser
             }
 
             $action = $this->actions[$currentState][$tokenName] ?? null;
-            if ($action === null) {
+            if ($action === null || $token === ScannerToken::ERROR) {
                 // Coleta tokens esperados neste estado
                 $expectedTokens = array_keys($this->actions[$currentState] ?? []);
 
