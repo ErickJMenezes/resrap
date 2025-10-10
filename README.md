@@ -108,7 +108,7 @@ calculator := expression { return eval("return {$1};"); }
 ### 4. Generate the parser
 
 ```bash
-php bin/resrap gen my-grammar.rr > MathParser.php
+php bin/resrap compile my-grammar.rr > MathParser.php
 ```
 
 ### 5. Use the parser
